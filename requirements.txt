@@ -10,7 +10,7 @@ imbalanced-learn==0.12.3
 prophet==1.1.5
 joblib==1.4.2
 shap>=0.46.0
-google-generativeai==0.7.2
+groq
 langdetect==1.0.9
 deep-translator==1.11.4
 bcrypt==4.1.3

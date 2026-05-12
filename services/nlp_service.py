@@ -1,5 +1,5 @@
 """
-NLP Query Service — Google Gemini (primary) + OpenAI (fallback)
+NLP Query Service — Groq (Llama 3.3 70B)
 Supports English and Urdu natural language queries
 """
 import time
@@ -57,25 +57,11 @@ def translate_to_english(text: str, source_lang: str = "ur") -> str:
         return text
 
 
-def _generate_sql_gemini(query: str) -> str:
-    """Use Google Gemini to generate SQL."""
-    import google.generativeai as genai
-    genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel(settings.GEMINI_MODEL)
-    prompt = f"{SYSTEM_PROMPT}\n\nGenerate SQL for: {query}"
-    response = model.generate_content(prompt)
-    sql = response.text.strip()
-    # Strip markdown code blocks if Gemini wraps them
-    sql = sql.replace("```sql", "").replace("```", "").strip()
-    return sql
-
-
-def _generate_sql_openai(query: str) -> str:
-    """Use OpenAI as fallback."""
-    from openai import OpenAI
-    client = OpenAI(api_key=settings.OPENAI_API_KEY)
+def _generate_sql_groq(query: str) -> str:
+    from groq import Groq
+    client = Groq(api_key=settings.GROQ_API_KEY)
     response = client.chat.completions.create(
-        model=settings.OPENAI_MODEL,
+        model=settings.GROQ_MODEL,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": f"Generate SQL for: {query}"},
@@ -97,36 +83,25 @@ def generate_sql(query: str) -> dict:
     success = False
     error = None
 
-    # Try Gemini first
-    if settings.GEMINI_API_KEY:
+    if settings.GROQ_API_KEY:
         try:
-            sql = _generate_sql_gemini(translated_query)
+            sql = _generate_sql_groq(translated_query)
             success = True
         except Exception as e:
-            error = f"Gemini error: {e}"
-
-    # Fallback to OpenAI
-    if not success and settings.OPENAI_API_KEY:
-        try:
-            sql = _generate_sql_openai(translated_query)
-            success = True
-            error = None
-        except Exception as e:
-            error = f"OpenAI error: {e}"
-
-    if not success and not error:
-        error = "No LLM API key configured. Add GEMINI_API_KEY to your .env file."
+            error = f"Groq error: {e}"
+    else:
+        error = "No GROQ_API_KEY configured."
 
     elapsed_ms = (time.time() - start) * 1000
 
     return {
-        "original_query": query,
+        "original_query":   query,
         "detected_language": detected_lang,
         "translated_query": translated_query,
-        "generated_sql": sql,
+        "generated_sql":    sql,
         "execution_time_ms": round(elapsed_ms, 2),
-        "is_successful": success,
-        "error_message": error,
+        "is_successful":    success,
+        "error_message":    error,
     }
 
 
@@ -137,7 +112,6 @@ def execute_nlp_query(query: str, db_session) -> dict:
 
     sql = result["generated_sql"]
 
-    # Block destructive SQL
     dangerous = ["drop", "delete", "truncate", "update", "insert", "alter", "create"]
     if any(kw in sql.lower() for kw in dangerous):
         return {
