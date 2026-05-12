@@ -16,5 +16,3 @@ gatherUsageStats = false
 [client]
 showSidebarNavigation = false
 
-[ui]
-initialSidebarState = "expanded"
