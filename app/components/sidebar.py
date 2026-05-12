@@ -66,7 +66,7 @@ def render_sidebar():
     role = user.get("role", "business_analyst")
 
     with st.sidebar:
-        st.image("assets/logo.png", width=160)
+        st.image("assets/logo.png", use_container_width=True)
         st.markdown("""
         <div style="text-align:center; padding: 2px 0 4px 0;">
             <p style="color:rgba(255,255,255,0.65); font-size:0.72rem; margin:0;">
