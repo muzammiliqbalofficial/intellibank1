@@ -4,7 +4,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-import plotly.express as px
 
 from app.utils.session import require_auth
 from app.utils.data_store import get_dataset, is_data_loaded, get_summary, get_branch_df, get_revenue_df
@@ -74,7 +73,7 @@ if role == "admin":
                     u_role = u.role.value if hasattr(u.role, "value") else str(u.role)
                     c_info, c_badge, c_del = st.columns([3, 2, 1])
                     with c_info:
-                        st.markdown(f"**{u.full_name or u.username}**  \n`{u.username}` · {u.email}")
+                        st.markdown(f"**{u.username}**  \n{u.email}")
                     with c_badge:
                         badge_color = {"admin":"#c62828","bank_manager":"#f57f17","business_analyst":"#2e7d32"}.get(u_role,"#1a237e")
                         st.markdown(

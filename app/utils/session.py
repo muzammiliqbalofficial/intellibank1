@@ -28,16 +28,15 @@ def login(token: str, user_data: dict):
 
 
 def logout():
-    for key in ["authenticated", "user", "token"]:
-        st.session_state[key] = None if key != "authenticated" else False
-    st.rerun()
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.switch_page("main.py")
 
 
 def require_auth():
     init_session()
     if not st.session_state.authenticated:
-        st.error("Please log in to access this page.")
-        st.stop()
+        st.switch_page("main.py")
     return st.session_state.user
 
 

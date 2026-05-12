@@ -22,14 +22,9 @@ footer { visibility: hidden; }
 [data-testid="stDecoration"] { display: none; }
 [data-testid="stHeader"] { visibility: hidden; }
 
-/* Always show sidebar expand/collapse toggle */
-[data-testid="stSidebarCollapsedControl"],
-[data-testid="stSidebarCollapseButton"],
-[data-testid="collapsedControl"] {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
+/* Hide sidebar collapse arrow — sidebar stays open always */
+[data-testid="stSidebarCollapseButton"] { display: none !important; }
+[data-testid="stSidebarCollapsedControl"] { display: none !important; }
 
 /* ── Sidebar ──────────────────────────────────── */
 [data-testid="stSidebar"] {
