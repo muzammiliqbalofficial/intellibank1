@@ -20,7 +20,7 @@ render_page_header("Audit Trail", "Complete activity log for compliance and secu
 # ── Filters ───────────────────────────────────────────────────────────────────
 col_f1, col_f2, col_f3, col_f4 = st.columns(4)
 with col_f1:
-    filter_action = st.text_input("Filter by Action", placeholder="e.g., LOGIN")
+    filter_action = st.selectbox("Filter by Action", ["All", "LOGIN_SUCCESS", "LOGIN_FAILED", "LOGOUT", "USER_CREATED", "USER_UPDATED", "USER_DELETED", "FRAUD_SCAN", "CHURN_ANALYSIS", "NLP_QUERY", "DATA_UPLOAD", "REPORT_EXPORTED"])
 with col_f2:
     filter_resource = st.selectbox("Resource", ["All", "auth", "users", "fraud", "churn", "nlp"])
 with col_f3:
@@ -31,12 +31,11 @@ with col_f4:
 # ── Fetch Logs ─────────────────────────────────────────────────────────────────
 db = get_db_session()
 try:
-    from services.auth_service import AuditService
     from db.models import AuditLog
 
     query = db.query(AuditLog)
-    if filter_action:
-        query = query.filter(AuditLog.action.ilike(f"%{filter_action}%"))
+    if filter_action != "All":
+        query = query.filter(AuditLog.action == filter_action)
     if filter_resource != "All":
         query = query.filter(AuditLog.resource == filter_resource)
     if filter_success == "Success":
