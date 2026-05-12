@@ -248,6 +248,19 @@ class AuditLog(Base):
     )
 
 
+class DataSnapshot(Base):
+    __tablename__ = "data_snapshots"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    uploaded_by  = Column(Integer, ForeignKey("users.id"), nullable=True)
+    filename     = Column(String(255))
+    row_count    = Column(Integer)
+    summary_json = Column(JSON)
+    revenue_json = Column(JSON)
+    branch_json  = Column(JSON)
+    created_at   = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
 class ModelMetric(Base):
     __tablename__ = "model_metrics"
 

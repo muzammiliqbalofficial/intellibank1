@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import io
 
 from app.utils.session import require_auth
-from app.utils.data_store import save_dataset, get_dataset, is_data_loaded, get_summary
+from app.utils.data_store import save_dataset, get_dataset, is_data_loaded, get_summary, save_snapshot
 from app.components.theme import load_css, apply_theme, render_page_header, render_footer
 from app.components.sidebar import render_sidebar
 
@@ -197,6 +197,7 @@ if uploaded:
                 st.warning(f"Forecast model: {e}")
 
         progress.progress(100, text="All done!")
+        save_snapshot(uploaded.name, user_id=user.get("id"))
 
         # ── Show results ──────────────────────────────────────────────────────
         st.markdown("### Training Results")

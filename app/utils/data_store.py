@@ -81,20 +81,73 @@ def get_churn_df() -> pd.DataFrame:
 
 def get_revenue_df() -> pd.DataFrame:
     df = get_dataset()
-    if df.empty or "transaction_date" not in df.columns or "amount" not in df.columns:
-        return pd.DataFrame()
-    rev = (df.groupby("transaction_date")["amount"]
-             .sum()
-             .reset_index()
-             .rename(columns={"transaction_date": "date", "amount": "revenue"}))
-    rev["date"] = pd.to_datetime(rev["date"])
-    return rev.sort_values("date")
+    if not df.empty and "transaction_date" in df.columns and "amount" in df.columns:
+        rev = (df.groupby("transaction_date")["amount"]
+                 .sum()
+                 .reset_index()
+                 .rename(columns={"transaction_date": "date", "amount": "revenue"}))
+        rev["date"] = pd.to_datetime(rev["date"])
+        return rev.sort_values("date")
+    snap = st.session_state.get("_snap_revenue", [])
+    if snap:
+        rev = pd.DataFrame(snap)
+        rev["date"] = pd.to_datetime(rev["date"])
+        return rev.sort_values("date")
+    return pd.DataFrame()
+
+
+def save_snapshot(filename: str, user_id: int = None):
+    """Save aggregated stats to DB so other sessions (manager) can read them."""
+    try:
+        from db.connection import SessionLocal
+        from db.models import DataSnapshot
+        summary  = get_summary()
+        rev_df   = get_revenue_df()
+        br_df    = get_branch_df()
+        db = SessionLocal()
+        db.query(DataSnapshot).delete()
+        snap = DataSnapshot(
+            uploaded_by  = user_id,
+            filename     = filename,
+            row_count    = summary.get("total_rows", 0),
+            summary_json = summary,
+            revenue_json = rev_df.assign(date=rev_df["date"].astype(str)).to_dict("records") if not rev_df.empty else [],
+            branch_json  = br_df.to_dict("records") if not br_df.empty else [],
+        )
+        db.add(snap)
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+
+
+def load_snapshot() -> bool:
+    """Load aggregated data from DB into session_state (for users without uploaded data)."""
+    if is_data_loaded():
+        return True
+    try:
+        from db.connection import SessionLocal
+        from db.models import DataSnapshot
+        db   = SessionLocal()
+        snap = db.query(DataSnapshot).order_by(DataSnapshot.created_at.desc()).first()
+        db.close()
+        if snap and snap.summary_json:
+            st.session_state["data_loaded"]       = True
+            st.session_state["data_summary"]      = snap.summary_json
+            st.session_state["_snap_revenue"]     = snap.revenue_json or []
+            st.session_state["_snap_branch"]      = snap.branch_json or []
+            st.session_state["_snap_only"]        = True
+            return True
+    except Exception:
+        pass
+    return False
 
 
 def get_branch_df() -> pd.DataFrame:
     df = get_dataset()
     if df.empty or "branch_code" not in df.columns:
-        return pd.DataFrame()
+        snap = st.session_state.get("_snap_branch", [])
+        return pd.DataFrame(snap) if snap else pd.DataFrame()
 
     grp = df.groupby("branch_code").agg(
         total_revenue   = ("amount",       "sum"),

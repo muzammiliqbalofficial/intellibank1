@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from app.utils.session import require_auth
-from app.utils.data_store import get_dataset, is_data_loaded, get_summary, get_branch_df, get_revenue_df
+from app.utils.data_store import get_dataset, is_data_loaded, get_summary, get_branch_df, get_revenue_df, load_snapshot
 from app.components.theme import load_css, apply_theme, render_page_header, metric_card, render_footer
 from app.components.sidebar import render_sidebar
 from app.components.tour import render_tour
@@ -20,6 +20,7 @@ render_sidebar()
 render_tour()
 
 role = user.get("role", "business_analyst")
+load_snapshot()          # load from DB if session_state is empty
 df      = get_dataset()
 loaded  = is_data_loaded()
 summary = get_summary()
