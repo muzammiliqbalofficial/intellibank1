@@ -131,9 +131,11 @@ with left:
 
 with mid:
     st.markdown("<div style='height:5vh'></div>", unsafe_allow_html=True)
-    st.image("assets/logo.png", width=220)
+    col_pad1, col_logo, col_pad2 = st.columns([0.5, 3, 0.5])
+    with col_logo:
+        st.image("assets/logo.png", use_container_width=True)
     st.markdown("""
-    <div style="text-align:center; margin-bottom:24px; margin-top:8px;">
+    <div style="text-align:center; margin-bottom:24px; margin-top:12px;">
         <h2 style="color:#0d1b3e; font-size:1.6rem; font-weight:700; margin:0;">Welcome Back</h2>
         <p style="color:#9e9e9e; margin:6px 0 0 0; font-size:0.9rem;">Sign in to your IntelliBank account</p>
     </div>
