@@ -193,3 +193,324 @@ def generate_churn_report(churn_df: pd.DataFrame, summary: dict) -> bytes:
     ]
     return generate_pdf_report("Customer Churn Report", sections,
                                f"churn_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ANALYST — Technical Report
+# ─────────────────────────────────────────────────────────────────────────────
+
+def generate_analyst_pdf_report(df: pd.DataFrame, summary: dict) -> bytes:
+    """Full technical report for Business Analyst — fraud + churn + dataset stats."""
+    ts = datetime.now().strftime("%B %d, %Y at %H:%M")
+    sections = []
+
+    # ── Dataset Overview ──────────────────────────────────────────────────────
+    overview_paras = [
+        f"Report Generated: {ts}",
+        f"Total Records: {summary.get('total_rows', len(df)):,}",
+        f"Unique Customers: {summary.get('total_customers', 0):,}",
+        f"Unique Branches: {summary.get('total_branches', 0):,}",
+        f"Date Range: {summary.get('date_from', 'N/A')} to {summary.get('date_to', 'N/A')}",
+        f"Total Transaction Volume: PKR {summary.get('total_revenue', 0):,.2f}",
+        f"Average Transaction Amount: PKR {summary.get('avg_transaction', 0):,.2f}",
+        f"Dataset Columns: {', '.join(df.columns.tolist())}",
+    ]
+    sections.append({"heading": "1. Dataset Overview", "paragraphs": overview_paras})
+
+    # ── Fraud Analysis ────────────────────────────────────────────────────────
+    if "is_fraud" in df.columns:
+        fraud_count = int(df["is_fraud"].sum())
+        fraud_rate  = df["is_fraud"].mean() * 100
+        fraud_paras = [
+            f"Total Fraudulent Transactions: {fraud_count:,}",
+            f"Fraud Rate: {fraud_rate:.2f}%",
+            f"Legitimate Transactions: {len(df) - fraud_count:,}",
+        ]
+        if "amount" in df.columns:
+            fraud_amt = df[df["is_fraud"] == 1]["amount"].sum()
+            fraud_paras.append(f"Total Amount at Risk: PKR {fraud_amt:,.2f}")
+            fraud_paras.append(f"Average Fraud Amount: PKR {df[df['is_fraud']==1]['amount'].mean():,.2f}")
+
+        sections.append({"heading": "2. Fraud Detection Analysis", "paragraphs": fraud_paras})
+
+        # Fraud by category table
+        if "merchant_category" in df.columns:
+            cat_grp = (df.groupby("merchant_category")
+                         .agg(total=("is_fraud","count"), fraudulent=("is_fraud","sum"))
+                         .reset_index())
+            cat_grp["fraud_rate_%"] = (cat_grp["fraudulent"] / cat_grp["total"] * 100).round(2)
+            cat_grp = cat_grp.sort_values("fraudulent", ascending=False)
+            sections.append({
+                "heading": "2a. Fraud by Merchant Category",
+                "paragraphs": [],
+                "table": {
+                    "headers": ["Category", "Total Txns", "Fraudulent", "Fraud Rate %"],
+                    "rows": cat_grp.values.tolist(),
+                },
+            })
+
+        # Fraud by transaction type
+        if "transaction_type" in df.columns:
+            type_grp = (df.groupby("transaction_type")
+                          .agg(total=("is_fraud","count"), fraudulent=("is_fraud","sum"))
+                          .reset_index())
+            type_grp["fraud_rate_%"] = (type_grp["fraudulent"] / type_grp["total"] * 100).round(2)
+            sections.append({
+                "heading": "2b. Fraud by Transaction Type",
+                "paragraphs": [],
+                "table": {
+                    "headers": ["Transaction Type", "Total", "Fraudulent", "Fraud Rate %"],
+                    "rows": type_grp.values.tolist(),
+                },
+            })
+
+    # ── Churn Analysis ────────────────────────────────────────────────────────
+    if "is_churned" in df.columns:
+        cust_df      = df.drop_duplicates("customer_id") if "customer_id" in df.columns else df
+        churned      = int(cust_df["is_churned"].sum())
+        churn_rate   = cust_df["is_churned"].mean() * 100
+        churn_paras  = [
+            f"Total Customers Analyzed: {len(cust_df):,}",
+            f"Churned Customers: {churned:,}",
+            f"Churn Rate: {churn_rate:.2f}%",
+            f"Retained Customers: {len(cust_df) - churned:,}",
+        ]
+        if "credit_score" in cust_df.columns:
+            avg_cs_churned  = cust_df[cust_df["is_churned"]==1]["credit_score"].mean()
+            avg_cs_retained = cust_df[cust_df["is_churned"]==0]["credit_score"].mean()
+            churn_paras.append(f"Avg Credit Score (Churned): {avg_cs_churned:.0f}")
+            churn_paras.append(f"Avg Credit Score (Retained): {avg_cs_retained:.0f}")
+
+        sections.append({"heading": "3. Customer Churn Analysis", "paragraphs": churn_paras})
+
+        if "city" in cust_df.columns:
+            city_churn = (cust_df.groupby("city")["is_churned"]
+                                  .agg(["count","sum"])
+                                  .reset_index())
+            city_churn.columns = ["City", "Total Customers", "Churned"]
+            city_churn["Churn Rate %"] = (city_churn["Churned"] / city_churn["Total Customers"] * 100).round(2)
+            city_churn = city_churn.sort_values("Churn Rate %", ascending=False)
+            sections.append({
+                "heading": "3a. Churn by City",
+                "paragraphs": [],
+                "table": {
+                    "headers": list(city_churn.columns),
+                    "rows": city_churn.values.tolist(),
+                },
+            })
+
+    # ── Branch Performance ────────────────────────────────────────────────────
+    if "branch_code" in df.columns and "amount" in df.columns:
+        br = df.groupby("branch_code").agg(
+            Transactions=("amount","count"),
+            Revenue=("amount","sum"),
+        ).reset_index()
+        if "is_fraud" in df.columns:
+            br["Fraud Count"] = df.groupby("branch_code")["is_fraud"].sum().values
+        br["Revenue"] = br["Revenue"].round(2)
+        br = br.sort_values("Revenue", ascending=False)
+        sections.append({
+            "heading": "4. Branch Performance",
+            "paragraphs": [],
+            "table": {
+                "headers": list(br.columns),
+                "rows": br.values.tolist(),
+            },
+        })
+
+    # ── Data Quality ──────────────────────────────────────────────────────────
+    null_counts = df.isnull().sum()
+    null_cols   = null_counts[null_counts > 0]
+    if not null_cols.empty:
+        quality_paras = [f"{col}: {cnt} missing values" for col, cnt in null_cols.items()]
+        sections.append({"heading": "5. Data Quality Notes", "paragraphs": quality_paras})
+    else:
+        sections.append({"heading": "5. Data Quality Notes",
+                         "paragraphs": ["No missing values detected in the dataset."]})
+
+    return generate_pdf_report("Technical Analysis Report — Business Analyst", sections)
+
+
+def generate_analyst_excel_report(df: pd.DataFrame, summary: dict) -> bytes:
+    """Multi-sheet Excel technical report for Business Analyst."""
+    sheets = {}
+
+    # Summary sheet
+    summary_rows = {k: [str(v)] for k, v in summary.items()}
+    sheets["Summary"] = pd.DataFrame.from_dict(summary_rows, orient="index", columns=["Value"]).reset_index().rename(columns={"index":"Metric"})
+
+    # Transactions sample
+    sheets["Transactions"] = df.head(500)
+
+    # Fraud breakdown
+    if "is_fraud" in df.columns and "merchant_category" in df.columns:
+        cat = (df.groupby("merchant_category")
+                  .agg(Total=("is_fraud","count"), Fraudulent=("is_fraud","sum"))
+                  .reset_index())
+        cat["Fraud_Rate_%"] = (cat["Fraudulent"] / cat["Total"] * 100).round(2)
+        sheets["Fraud by Category"] = cat
+
+    # Churn breakdown
+    if "is_churned" in df.columns and "city" in df.columns and "customer_id" in df.columns:
+        cust_df = df.drop_duplicates("customer_id")
+        city_c  = (cust_df.groupby("city")["is_churned"]
+                           .agg(Total_Customers="count", Churned="sum")
+                           .reset_index())
+        city_c["Churn_Rate_%"] = (city_c["Churned"] / city_c["Total_Customers"] * 100).round(2)
+        sheets["Churn by City"] = city_c
+
+    # Branch performance
+    if "branch_code" in df.columns and "amount" in df.columns:
+        br = df.groupby("branch_code").agg(
+            Transactions=("amount","count"),
+            Total_Revenue=("amount","sum"),
+        ).reset_index()
+        if "is_fraud" in df.columns:
+            br["Fraud_Count"] = df.groupby("branch_code")["is_fraud"].sum().values
+        sheets["Branch Performance"] = br
+
+    return generate_excel_report(sheets)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MANAGER — Executive Business Report
+# ─────────────────────────────────────────────────────────────────────────────
+
+def generate_manager_pdf_report(summary: dict, rev_df: pd.DataFrame, branch_df: pd.DataFrame) -> bytes:
+    """Executive business report for Bank Manager — no technical ML details."""
+    ts = datetime.now().strftime("%B %d, %Y at %H:%M")
+    sections = []
+
+    # ── Executive Summary ─────────────────────────────────────────────────────
+    total_rev   = summary.get("total_revenue", 0)
+    fraud_rate  = summary.get("fraud_rate", 0)
+    churn_rate  = summary.get("churn_rate", 0)
+    customers   = summary.get("total_customers", 0)
+
+    exec_paras = [
+        f"Report Generated: {ts}",
+        f"Reporting Period: {summary.get('date_from','N/A')} to {summary.get('date_to','N/A')}",
+        "",
+        f"Total Revenue: PKR {total_rev:,.2f}",
+        f"Total Customers: {customers:,}",
+        f"Fraud Alert Rate: {fraud_rate:.2f}% {'[HIGH RISK]' if fraud_rate > 2 else '[Normal]'}",
+        f"Customer Churn Rate: {churn_rate:.2f}% {'[HIGH RISK]' if churn_rate > 10 else '[Normal]'}",
+        f"Total Transactions: {summary.get('total_rows', 0):,}",
+        f"Top Performing Branch: {summary.get('top_branch', 'N/A')}",
+    ]
+    sections.append({"heading": "Executive Summary", "paragraphs": exec_paras})
+
+    # ── Risk Assessment ───────────────────────────────────────────────────────
+    risk_level_fraud  = "HIGH" if fraud_rate > 5 else "MEDIUM" if fraud_rate > 2 else "LOW"
+    risk_level_churn  = "HIGH" if churn_rate > 20 else "MEDIUM" if churn_rate > 10 else "LOW"
+    risk_paras = [
+        f"Fraud Risk Level: {risk_level_fraud}",
+        f"  - {summary.get('fraud_count', 0):,} fraudulent transactions detected",
+        f"  - Action Required: {'Immediate investigation recommended.' if risk_level_fraud == 'HIGH' else 'Continue monitoring.' if risk_level_fraud == 'MEDIUM' else 'Risk within acceptable range.'}",
+        "",
+        f"Churn Risk Level: {risk_level_churn}",
+        f"  - {summary.get('churned_count', 0):,} customers at high churn risk",
+        f"  - Action Required: {'Launch immediate retention campaign.' if risk_level_churn == 'HIGH' else 'Review customer satisfaction metrics.' if risk_level_churn == 'MEDIUM' else 'Churn within acceptable range.'}",
+    ]
+    sections.append({"heading": "Risk Assessment", "paragraphs": risk_paras})
+
+    # ── Revenue Performance ───────────────────────────────────────────────────
+    if not rev_df.empty:
+        rev_copy = rev_df.copy()
+        rev_copy["date"] = pd.to_datetime(rev_copy["date"])
+        rev_copy["month"] = rev_copy["date"].dt.to_period("M").astype(str)
+        monthly = rev_copy.groupby("month")["revenue"].sum().tail(12).reset_index()
+        monthly["revenue"] = monthly["revenue"].round(2)
+        monthly.columns = ["Month", "Revenue (PKR)"]
+
+        monthly_rows = monthly.values.tolist()
+        if monthly_rows:
+            total_m = sum(r[1] for r in monthly_rows)
+            monthly_rows.append(["TOTAL", round(total_m, 2)])
+
+        sections.append({
+            "heading": "Revenue Performance (Last 12 Months)",
+            "paragraphs": [],
+            "table": {
+                "headers": ["Month", "Revenue (PKR)"],
+                "rows": monthly_rows,
+            },
+        })
+
+    # ── Branch Performance ────────────────────────────────────────────────────
+    if not branch_df.empty:
+        br = branch_df.copy()
+        display_cols = ["branch_code", "total_revenue", "transactions", "customers", "fraud_rate_pct"]
+        display_cols = [c for c in display_cols if c in br.columns]
+        br_display   = br[display_cols].copy()
+        if "total_revenue" in br_display.columns:
+            br_display["total_revenue"] = br_display["total_revenue"].apply(lambda x: f"PKR {x:,.0f}")
+        if "fraud_rate_pct" in br_display.columns:
+            br_display["fraud_rate_pct"] = br_display["fraud_rate_pct"].apply(lambda x: f"{x}%")
+
+        header_map = {
+            "branch_code":    "Branch",
+            "total_revenue":  "Total Revenue",
+            "transactions":   "Transactions",
+            "customers":      "Customers",
+            "fraud_rate_pct": "Fraud Rate",
+        }
+        br_display = br_display.rename(columns=header_map)
+
+        sections.append({
+            "heading": "Branch Performance Comparison",
+            "paragraphs": [],
+            "table": {
+                "headers": list(br_display.columns),
+                "rows": br_display.values.tolist(),
+            },
+        })
+
+    # ── Strategic Recommendations ─────────────────────────────────────────────
+    recommendations = []
+    if fraud_rate > 2:
+        recommendations.append("FRAUD: Strengthen transaction monitoring for high-risk merchant categories.")
+    if churn_rate > 10:
+        recommendations.append("CHURN: Initiate targeted retention programs for at-risk customer segments.")
+    if not recommendations:
+        recommendations.append("All KPIs are within acceptable thresholds. Maintain current strategies.")
+    recommendations.append("Schedule quarterly review with Business Analyst team for detailed ML model insights.")
+
+    sections.append({"heading": "Strategic Recommendations", "paragraphs": recommendations})
+
+    return generate_pdf_report("Executive Business Report — Bank Manager", sections)
+
+
+def generate_manager_excel_report(summary: dict, rev_df: pd.DataFrame, branch_df: pd.DataFrame) -> bytes:
+    """Excel executive report for Bank Manager."""
+    sheets = {}
+
+    # KPI Summary
+    kpi_data = {
+        "Total Revenue (PKR)":    summary.get("total_revenue", 0),
+        "Total Customers":        summary.get("total_customers", 0),
+        "Total Transactions":     summary.get("total_rows", 0),
+        "Fraud Rate (%)":         summary.get("fraud_rate", 0),
+        "Fraudulent Transactions":summary.get("fraud_count", 0),
+        "Churn Rate (%)":         summary.get("churn_rate", 0),
+        "Churned Customers":      summary.get("churned_count", 0),
+        "Top Branch":             summary.get("top_branch", "N/A"),
+        "Reporting From":         summary.get("date_from", "N/A"),
+        "Reporting To":           summary.get("date_to", "N/A"),
+    }
+    sheets["KPI Summary"] = pd.DataFrame(list(kpi_data.items()), columns=["Metric", "Value"])
+
+    # Monthly revenue
+    if not rev_df.empty:
+        rc = rev_df.copy()
+        rc["date"] = pd.to_datetime(rc["date"])
+        rc["Month"] = rc["date"].dt.to_period("M").astype(str)
+        monthly = rc.groupby("Month")["revenue"].sum().round(2).reset_index()
+        monthly.columns = ["Month", "Revenue (PKR)"]
+        sheets["Monthly Revenue"] = monthly
+
+    # Branch performance
+    if not branch_df.empty:
+        sheets["Branch Performance"] = branch_df.copy()
+
+    return generate_excel_report(sheets)
