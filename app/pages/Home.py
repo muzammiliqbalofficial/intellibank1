@@ -122,17 +122,16 @@ if role == "admin":
         with st.form("add_user_form", clear_on_submit=True):
             fc1, fc2 = st.columns(2)
             with fc1:
-                new_username  = st.text_input("Username *")
-                new_email     = st.text_input("Email *")
-                new_password  = st.text_input("Password *", type="password")
+                new_username = st.text_input("Username *")
+                new_email    = st.text_input("Email *")
             with fc2:
-                new_fullname  = st.text_input("Full Name *")
-                new_role      = st.selectbox("Role *", ["bank_manager", "business_analyst"],
-                                             format_func=lambda x: "🟡 Bank Manager" if x == "bank_manager" else "🟢 Business Analyst")
+                new_password = st.text_input("Password *", type="password")
+                new_role     = st.selectbox("Role *", ["bank_manager", "business_analyst"],
+                                            format_func=lambda x: "🟡 Bank Manager" if x == "bank_manager" else "🟢 Business Analyst")
             submitted = st.form_submit_button("✅ Create User", type="primary", use_container_width=True)
 
         if submitted:
-            if not all([new_username.strip(), new_email.strip(), new_password.strip(), new_fullname.strip()]):
+            if not all([new_username.strip(), new_email.strip(), new_password.strip()]):
                 st.error("All fields are required.")
             else:
                 role_map = {
@@ -142,7 +141,7 @@ if role == "admin":
                 db3 = get_db_session()
                 try:
                     AuthService.create_user(db3, new_username.strip(), new_email.strip(),
-                                            new_password, new_fullname.strip(), role_map[new_role])
+                                            new_password, new_username.strip(), role_map[new_role])
                     st.success(f"✅ User **{new_username}** created successfully as **{new_role}**!")
                     st.rerun()
                 except Exception as e:
