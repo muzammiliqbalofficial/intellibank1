@@ -33,68 +33,138 @@ if role == "admin":
     render_page_header("Admin Dashboard", "User management and system activity overview", "🔐")
 
     from app.utils.session import get_db_session
-    db = get_db_session()
-    try:
-        from db.models import User, AuditLog
-        users    = db.query(User).all()
-        logs     = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(20).all() \
-                   if hasattr(AuditLog, "created_at") else []
-    except Exception:
-        users, logs = [], []
-    finally:
-        db.close()
+    from db.models import User, AuditLog, UserRole
+    from services.auth_service import AuthService
+
+    def _load_users_logs():
+        db = get_db_session()
+        try:
+            u = db.query(User).all()
+            l = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(20).all()
+            return u, l
+        except Exception:
+            return [], []
+        finally:
+            db.close()
+
+    users, logs = _load_users_logs()
 
     # KPIs
     c1, c2, c3 = st.columns(3)
     role_counts = {}
     for u in users:
-        role_counts[u.role] = role_counts.get(u.role, 0) + 1
+        rk = u.role.value if hasattr(u.role, "value") else str(u.role)
+        role_counts[rk] = role_counts.get(rk, 0) + 1
 
-    with c1: metric_card("Total Users",        str(len(users)),                          "👥")
-    with c2: metric_card("Bank Managers",      str(role_counts.get("bank_manager", 0)),  "🟡")
-    with c3: metric_card("Business Analysts",  str(role_counts.get("business_analyst", 0)), "🟢")
+    with c1: metric_card("Total Users",       str(len(users)),                                "👥")
+    with c2: metric_card("Bank Managers",     str(role_counts.get("bank_manager", 0)),        "🟡")
+    with c3: metric_card("Business Analysts", str(role_counts.get("business_analyst", 0)),    "🟢")
 
     st.markdown("<br/>", unsafe_allow_html=True)
 
-    col_l, col_r = st.columns([1, 1])
+    tab1, tab2, tab3 = st.tabs(["👥 All Users", "➕ Add User", "📋 Activity Logs"])
 
-    with col_l:
-        st.subheader("Registered Users")
-        if users:
-            user_data = [{
-                "Username":  u.username,
-                "Full Name": u.full_name,
-                "Role":      u.role,
-                "Email":     u.email,
-            } for u in users]
-            st.dataframe(pd.DataFrame(user_data), use_container_width=True, hide_index=True)
+    # ── Tab 1: All Users ──────────────────────────────────────────────────────
+    with tab1:
+        col_l, col_r = st.columns([3, 2])
+        with col_l:
+            st.subheader("Registered Users")
+            if users:
+                for u in users:
+                    u_role = u.role.value if hasattr(u.role, "value") else str(u.role)
+                    c_info, c_badge, c_del = st.columns([3, 2, 1])
+                    with c_info:
+                        st.markdown(f"**{u.full_name or u.username}**  \n`{u.username}` · {u.email}")
+                    with c_badge:
+                        badge_color = {"admin":"#c62828","bank_manager":"#f57f17","business_analyst":"#2e7d32"}.get(u_role,"#1a237e")
+                        st.markdown(
+                            f"<span style='background:{badge_color}20;color:{badge_color};"
+                            f"padding:3px 10px;border-radius:12px;font-size:0.78rem;"
+                            f"font-weight:600;border:1px solid {badge_color}60'>{u_role}</span>",
+                            unsafe_allow_html=True
+                        )
+                    with c_del:
+                        if u.username != user.get("username"):
+                            if st.button("🗑️", key=f"del_{u.id}", help=f"Delete {u.username}"):
+                                db2 = get_db_session()
+                                try:
+                                    target = db2.query(User).filter(User.id == u.id).first()
+                                    if target:
+                                        db2.delete(target)
+                                        db2.commit()
+                                    st.success(f"User '{u.username}' deleted.")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Error: {e}")
+                                finally:
+                                    db2.close()
+                        else:
+                            st.caption("(you)")
+                    st.divider()
+            else:
+                st.info("No users found.")
+
+        with col_r:
+            st.subheader("Role Distribution")
+            if role_counts:
+                fig = go.Figure(go.Pie(
+                    labels=list(role_counts.keys()),
+                    values=list(role_counts.values()),
+                    marker=dict(colors=["#c62828", "#f9a825", "#1a237e"]),
+                    hole=0.45, textinfo="percent+label",
+                ))
+                fig.update_layout(height=300, margin=dict(l=0,r=0,t=10,b=0),
+                                  paper_bgcolor="rgba(0,0,0,0)", showlegend=False)
+                st.plotly_chart(fig, use_container_width=True)
+
+    # ── Tab 2: Add User ───────────────────────────────────────────────────────
+    with tab2:
+        st.subheader("Create New User")
+        with st.form("add_user_form", clear_on_submit=True):
+            fc1, fc2 = st.columns(2)
+            with fc1:
+                new_username  = st.text_input("Username *")
+                new_email     = st.text_input("Email *")
+                new_password  = st.text_input("Password *", type="password")
+            with fc2:
+                new_fullname  = st.text_input("Full Name *")
+                new_role      = st.selectbox("Role *", ["bank_manager", "business_analyst"],
+                                             format_func=lambda x: "🟡 Bank Manager" if x == "bank_manager" else "🟢 Business Analyst")
+            submitted = st.form_submit_button("✅ Create User", type="primary", use_container_width=True)
+
+        if submitted:
+            if not all([new_username.strip(), new_email.strip(), new_password.strip(), new_fullname.strip()]):
+                st.error("All fields are required.")
+            else:
+                role_map = {
+                    "bank_manager":     UserRole.BANK_MANAGER,
+                    "business_analyst": UserRole.BUSINESS_ANALYST,
+                }
+                db3 = get_db_session()
+                try:
+                    AuthService.create_user(db3, new_username.strip(), new_email.strip(),
+                                            new_password, new_fullname.strip(), role_map[new_role])
+                    st.success(f"✅ User **{new_username}** created successfully as **{new_role}**!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to create user: {e}")
+                finally:
+                    db3.close()
+
+    # ── Tab 3: Activity Logs ──────────────────────────────────────────────────
+    with tab3:
+        st.subheader("Recent Activity Logs")
+        if logs:
+            log_data = [{
+                "Action":    l.action,
+                "User ID":   str(l.user_id or "—"),
+                "Resource":  l.resource or "—",
+                "Status":    "✅" if l.is_success else "❌",
+                "Timestamp": str(l.created_at)[:16] if l.created_at else "",
+            } for l in logs]
+            st.dataframe(pd.DataFrame(log_data), use_container_width=True, hide_index=True)
         else:
-            st.info("No users found.")
-
-    with col_r:
-        st.subheader("Role Distribution")
-        if role_counts:
-            fig = go.Figure(go.Pie(
-                labels=list(role_counts.keys()),
-                values=list(role_counts.values()),
-                marker=dict(colors=["#c62828", "#f9a825", "#1a237e"]),
-                hole=0.45, textinfo="percent+label",
-            ))
-            fig.update_layout(height=300, margin=dict(l=0,r=0,t=10,b=0),
-                              paper_bgcolor="rgba(0,0,0,0)", showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("---")
-    st.subheader("Recent Activity Logs")
-    if logs:
-        log_data = [{
-            "Action":    l.action,
-            "User":      l.username if hasattr(l, "username") else str(l.user_id),
-            "Timestamp": str(l.created_at)[:16] if l.created_at else "",
-        } for l in logs]
-        st.dataframe(pd.DataFrame(log_data), use_container_width=True, hide_index=True)
-    else:
-        st.info("No activity logs yet.")
+            st.info("No activity logs yet.")
 
     render_footer()
     st.stop()

@@ -20,8 +20,16 @@ footer { visibility: hidden; }
 [data-testid="stSidebarNavItems"] { display: none !important; }
 [data-testid="stToolbar"] { display: none; }
 [data-testid="stDecoration"] { display: none; }
-/* Keep header visible so sidebar toggle button works */
-header [data-testid="stHeader"] { visibility: hidden; }
+[data-testid="stHeader"] { visibility: hidden; }
+
+/* Always show sidebar expand/collapse toggle */
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
 
 /* ── Sidebar ──────────────────────────────────── */
 [data-testid="stSidebar"] {
