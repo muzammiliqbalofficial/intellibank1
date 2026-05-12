@@ -75,8 +75,8 @@ with left:
                     display:flex; flex-direction:column; justify-content:space-between;
                     box-shadow:0 12px 40px rgba(13,27,62,0.45);">
             <div>
-                <img src="data:image/png;base64,{_logo_b64()}" style="width:190px; margin-bottom:12px; filter:brightness(1.05);" />
-                <p style="color:rgba(255,255,255,0.75); font-size:1rem; margin-top:4px;">
+                <h1 style="color:white; font-size:2.4rem; font-weight:800; margin:0;">IntelliBank</h1>
+                <p style="color:rgba(255,255,255,0.75); font-size:1rem; margin-top:8px;">
                     AI-Powered Banking Data Analyst
                 </p>
             </div>
@@ -130,10 +130,11 @@ with left:
     """, unsafe_allow_html=True)
 
 with mid:
-    st.markdown("<div style='height:7vh'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:5vh'></div>", unsafe_allow_html=True)
+    st.image("assets/logo.png", width=220)
     st.markdown("""
-    <div style="text-align:center; margin-bottom:32px;">
-        <h2 style="color:#1a237e; font-size:1.8rem; font-weight:700; margin:0;">Welcome Back</h2>
+    <div style="text-align:center; margin-bottom:24px; margin-top:8px;">
+        <h2 style="color:#0d1b3e; font-size:1.6rem; font-weight:700; margin:0;">Welcome Back</h2>
         <p style="color:#9e9e9e; margin:6px 0 0 0; font-size:0.9rem;">Sign in to your IntelliBank account</p>
     </div>
     """, unsafe_allow_html=True)
