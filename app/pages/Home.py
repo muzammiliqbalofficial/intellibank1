@@ -296,37 +296,6 @@ elif role == "bank_manager":
                 display["churn_rate_pct"] = display["churn_rate_pct"].apply(lambda x: f"{x}%")
             st.dataframe(display, use_container_width=True, hide_index=True)
 
-    # ── Recent Analyst Activities ──────────────────────────────────────────────
-    st.markdown("---")
-    st.subheader("Recent Analyst Activities")
-    from app.utils.session import get_db_session
-    from db.models import AuditLog, User
-    db_m = get_db_session()
-    try:
-        analyst_actions = ["FRAUD_SCAN", "CHURN_ANALYSIS", "NLP_QUERY",
-                           "DATA_UPLOAD", "REPORT_EXPORTED", "LOGIN_SUCCESS"]
-        logs_m = (db_m.query(AuditLog, User)
-                  .join(User, AuditLog.user_id == User.id, isouter=True)
-                  .filter(AuditLog.action.in_(analyst_actions))
-                  .order_by(AuditLog.created_at.desc())
-                  .limit(10).all())
-    except Exception:
-        logs_m = []
-    finally:
-        db_m.close()
-
-    if logs_m:
-        act_data = [{
-            "Analyst":   row.User.username if row.User else "—",
-            "Action":    row.AuditLog.action,
-            "Resource":  row.AuditLog.resource or "—",
-            "Status":    "✅ Success" if row.AuditLog.is_success else "❌ Failed",
-            "Time":      str(row.AuditLog.created_at)[:16] if row.AuditLog.created_at else "—",
-        } for row in logs_m]
-        st.dataframe(pd.DataFrame(act_data), use_container_width=True, hide_index=True)
-    else:
-        st.info("No analyst activity recorded yet.")
-
     render_footer()
     st.stop()
 
