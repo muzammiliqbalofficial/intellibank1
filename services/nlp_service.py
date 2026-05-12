@@ -1,5 +1,5 @@
 """
-NLP Query Service — Groq (Llama 3.3 70B)
+NLP Query Service — LLM-powered SQL generation
 Supports English and Urdu natural language queries
 """
 import time
@@ -88,9 +88,9 @@ def generate_sql(query: str) -> dict:
             sql = _generate_sql_groq(translated_query)
             success = True
         except Exception as e:
-            error = f"Groq error: {e}"
+            error = f"LLM API error: {e}"
     else:
-        error = "No GROQ_API_KEY configured."
+        error = "No API key configured."
 
     elapsed_ms = (time.time() - start) * 1000
 
