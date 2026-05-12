@@ -40,11 +40,8 @@ ROLE_PAGES = {
         ("📋", "audit", "Audit_Trail"),
     ],
     "bank_manager": [
-        ("🏠", "home",     "Home"),
-        ("📤", "upload",   "Data_Upload"),
-        ("💬", "nlp",      "NLP_Query"),
-        ("📈", "forecast", "Revenue_Forecasting"),
-        ("🏢", "branches", "Branch_Comparison"),
+        ("🏠", "home", "Home"),
+        ("💬", "nlp",  "NLP_Query"),
     ],
     "business_analyst": [
         ("🏠", "home",   "Home"),
