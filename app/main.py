@@ -5,9 +5,19 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import base64, os
 import streamlit as st
 from app.utils.session import init_session, login
 from app.components.theme import load_css
+
+
+def _logo_b64() -> str:
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "logo.png")
+    try:
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except Exception:
+        return ""
 
 st.set_page_config(
     page_title="IntelliBank — Sign In",
@@ -57,18 +67,16 @@ initialize_database()
 left, mid, right = st.columns([1, 1.1, 1])
 
 with left:
-    st.markdown("""
+    st.markdown(f"""
     <div style="height:100vh; display:flex; flex-direction:column;
                 justify-content:center; padding:40px 20px;">
-        <div style="background:linear-gradient(135deg,#1a237e,#1565c0);
+        <div style="background:linear-gradient(135deg,#0d1b3e,#1a3a5c,#0d5c6e);
                     border-radius:20px; padding:40px 32px; color:white; height:85vh;
                     display:flex; flex-direction:column; justify-content:space-between;
-                    box-shadow:0 12px 40px rgba(26,35,126,0.35);">
+                    box-shadow:0 12px 40px rgba(13,27,62,0.45);">
             <div>
-                <div style="font-size:3rem; margin-bottom:12px;">🏦</div>
-                <h1 style="color:white; font-size:2.2rem; font-weight:800;
-                           margin:0; line-height:1.2;">IntelliBank</h1>
-                <p style="color:rgba(255,255,255,0.75); font-size:1rem; margin-top:8px;">
+                <img src="data:image/png;base64,{_logo_b64()}" style="width:190px; margin-bottom:12px; filter:brightness(1.05);" />
+                <p style="color:rgba(255,255,255,0.75); font-size:1rem; margin-top:4px;">
                     AI-Powered Banking Data Analyst
                 </p>
             </div>

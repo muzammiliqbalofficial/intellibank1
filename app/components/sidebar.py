@@ -66,10 +66,10 @@ def render_sidebar():
     role = user.get("role", "business_analyst")
 
     with st.sidebar:
+        st.image("assets/logo.png", width=160)
         st.markdown("""
-        <div style="text-align:center; padding: 12px 0 4px 0;">
-            <h2 style="color:white; margin:0; font-size:1.4rem;">🏦 IntelliBank</h2>
-            <p style="color:rgba(255,255,255,0.6); font-size:0.72rem; margin:4px 0 0 0;">
+        <div style="text-align:center; padding: 2px 0 4px 0;">
+            <p style="color:rgba(255,255,255,0.65); font-size:0.72rem; margin:0;">
                 AI-Powered Banking Analyst
             </p>
         </div>
