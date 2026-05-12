@@ -296,6 +296,43 @@ elif role == "bank_manager":
                 display["churn_rate_pct"] = display["churn_rate_pct"].apply(lambda x: f"{x}%")
             st.dataframe(display, use_container_width=True, hide_index=True)
 
+        # ── Generate Report ────────────────────────────────────────────────────
+        st.markdown("---")
+        st.subheader("Generate Executive Report")
+        st.caption("Download a business-oriented summary report for strategic decision-making.")
+        rpt_col1, rpt_col2, rpt_col3 = st.columns([1, 1, 2])
+        with rpt_col1:
+            rpt_fmt = st.selectbox("Format", ["PDF", "Excel"], key="mgr_rpt_fmt")
+        with rpt_col2:
+            st.markdown("<br/>", unsafe_allow_html=True)
+            gen_rpt = st.button("Generate Report", type="primary", use_container_width=True, key="mgr_gen_rpt")
+
+        if gen_rpt:
+            from services.report_service import generate_manager_pdf_report, generate_manager_excel_report
+            rev_df_rpt    = get_revenue_df()
+            branch_df_rpt = get_branch_df()
+            with st.spinner("Generating executive report..."):
+                if rpt_fmt == "PDF":
+                    rpt_bytes = generate_manager_pdf_report(summary, rev_df_rpt, branch_df_rpt)
+                    st.download_button(
+                        label="Download Executive Report (PDF)",
+                        data=rpt_bytes,
+                        file_name=f"IntelliBank_Executive_Report_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.pdf",
+                        mime="application/pdf",
+                        type="primary",
+                        use_container_width=True,
+                    )
+                else:
+                    rpt_bytes = generate_manager_excel_report(summary, rev_df_rpt, branch_df_rpt)
+                    st.download_button(
+                        label="Download Executive Report (Excel)",
+                        data=rpt_bytes,
+                        file_name=f"IntelliBank_Executive_Report_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        type="primary",
+                        use_container_width=True,
+                    )
+
     render_footer()
     st.stop()
 
@@ -411,5 +448,51 @@ else:
                 xaxis=dict(showgrid=False), yaxis=dict(gridcolor="#f0f0f0")
             )
             st.plotly_chart(fig4, use_container_width=True)
+
+    # ── Generate Technical Report ──────────────────────────────────────────────
+    st.markdown("---")
+    st.subheader("Generate Technical Report")
+    st.caption("Export a detailed technical analysis report including fraud, churn, and branch statistics.")
+    rc1, rc2, rc3 = st.columns([1, 1, 2])
+    with rc1:
+        ana_rpt_fmt = st.selectbox("Format", ["PDF", "Excel", "CSV"], key="ana_rpt_fmt")
+    with rc2:
+        st.markdown("<br/>", unsafe_allow_html=True)
+        gen_ana_rpt = st.button("Generate Report", type="primary", use_container_width=True, key="ana_gen_rpt")
+
+    if gen_ana_rpt:
+        from services.report_service import generate_analyst_pdf_report, generate_analyst_excel_report, dataframe_to_csv
+        fname_ts = pd.Timestamp.now().strftime("%Y%m%d_%H%M")
+        with st.spinner("Generating technical report..."):
+            if ana_rpt_fmt == "PDF":
+                rpt_bytes = generate_analyst_pdf_report(df, summary)
+                st.download_button(
+                    label="Download Technical Report (PDF)",
+                    data=rpt_bytes,
+                    file_name=f"IntelliBank_Technical_Report_{fname_ts}.pdf",
+                    mime="application/pdf",
+                    type="primary",
+                    use_container_width=True,
+                )
+            elif ana_rpt_fmt == "Excel":
+                rpt_bytes = generate_analyst_excel_report(df, summary)
+                st.download_button(
+                    label="Download Technical Report (Excel)",
+                    data=rpt_bytes,
+                    file_name=f"IntelliBank_Technical_Report_{fname_ts}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type="primary",
+                    use_container_width=True,
+                )
+            else:
+                csv_str = dataframe_to_csv(df)
+                st.download_button(
+                    label="Download Dataset (CSV)",
+                    data=csv_str,
+                    file_name=f"IntelliBank_Dataset_{fname_ts}.csv",
+                    mime="text/csv",
+                    type="primary",
+                    use_container_width=True,
+                )
 
     render_footer()
