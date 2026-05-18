@@ -76,16 +76,22 @@ def load_model(branch_id: Optional[int] = None):
         path = MODEL_DIR / "forecast_model.pkl"
     try:
         model = joblib.load(path)
-        # Validate model is compatible with current Prophet version
-        model.history  # validates model loaded correctly
+        # Run a mini predict to confirm full compatibility with current Prophet version
+        test = model.make_future_dataframe(periods=2)
+        model.predict(test.tail(1))
         return model
+    except FileNotFoundError:
+        raise
     except Exception:
-        # Model file is stale / version-incompatible — remove so UI prompts retrain
+        # Old / version-incompatible pkl — delete so the UI prompts retrain
         try:
             path.unlink(missing_ok=True)
         except Exception:
             pass
-        raise FileNotFoundError(f"Forecast model is outdated. Please retrain from the Train tab.")
+        raise FileNotFoundError(
+            "Saved forecast model is incompatible with the current Prophet version. "
+            "Please retrain from the Train tab."
+        )
 
 
 if __name__ == "__main__":
