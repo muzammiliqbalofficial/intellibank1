@@ -88,8 +88,26 @@ with tab1:
                     name="95% Confidence Interval",
                 ))
 
-        fig.add_vline(x=today, line_dash="dash", line_color="grey",
-                      annotation_text="Today", annotation_position="top")
+        today_ts = pd.Timestamp(today)
+        fig.add_shape(
+            type="line",
+            x0=today_ts,
+            x1=today_ts,
+            y0=0,
+            y1=1,
+            xref="x",
+            yref="paper",
+            line=dict(color="grey", dash="dash"),
+        )
+        fig.add_annotation(
+            x=today_ts,
+            y=1,
+            xref="x",
+            yref="paper",
+            text="Today",
+            showarrow=False,
+            yshift=10,
+        )
         fig.update_layout(
             height=420, title="Revenue Forecast",
             xaxis_title="Date", yaxis_title="Revenue (PKR)",
