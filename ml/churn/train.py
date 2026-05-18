@@ -29,7 +29,7 @@ CHURN_FEATURES = [
 def preprocess(df: pd.DataFrame):
     df = df.copy()
 
-    # Standard feature mapping
+    # Standard feature mapping (Kaggle-style column names)
     col_map = {
         "CreditScore": "credit_score",
         "Age": "age",
@@ -44,6 +44,16 @@ def preprocess(df: pd.DataFrame):
         "Exited": "churned",
     }
     df.rename(columns={k: v for k, v in col_map.items() if k in df.columns}, inplace=True)
+
+    # IntelliBank dataset alternative column names
+    if "balance"   not in df.columns and "account_balance" in df.columns:
+        df["balance"] = df["account_balance"]
+    if "tenure"    not in df.columns and "tenure_years"    in df.columns:
+        df["tenure"] = df["tenure_years"]
+    if "geography" not in df.columns and "city"            in df.columns:
+        df["geography"] = df["city"]
+    if "churned"   not in df.columns and "is_churned"      in df.columns:
+        df["churned"] = df["is_churned"]
 
     # Fill nulls
     num_cols = df.select_dtypes(include=[np.number]).columns
@@ -63,9 +73,14 @@ def preprocess(df: pd.DataFrame):
     else:
         df["gender_encoded"] = 0
 
-    # Feature engineering
-    df["balance_salary_ratio"] = df["balance"] / (df.get("estimated_salary", pd.Series([1] * len(df))) + 1)
-    df["products_per_year"] = df["num_products"] / (df.get("tenure", pd.Series([1] * len(df))) + 1)
+    # Feature engineering — safe fallbacks if columns missing
+    bal = df["balance"]           if "balance"          in df.columns else pd.Series(0,        index=df.index)
+    sal = df["estimated_salary"]  if "estimated_salary" in df.columns else pd.Series(1,        index=df.index)
+    ten = df["tenure"]            if "tenure"           in df.columns else pd.Series(1,        index=df.index)
+    prd = df["num_products"]      if "num_products"     in df.columns else pd.Series(1,        index=df.index)
+
+    df["balance_salary_ratio"] = bal / (sal + 1)
+    df["products_per_year"]    = prd / (ten + 1)
 
     return df
 
