@@ -4,6 +4,8 @@ Dataset: UCI Bank Marketing + transaction history
 """
 import pandas as pd
 import numpy as np
+import prophet as prophet_pkg
+import cmdstanpy
 
 # Prophet uses np.float_ which was removed in NumPy 2.0
 if not hasattr(np, "float_"):
@@ -20,6 +22,19 @@ MODEL_DIR = Path(__file__).parent / "artifacts"
 MODEL_DIR.mkdir(exist_ok=True)
 
 
+def configure_prophet_backend() -> None:
+    """Point CmdStanPy at Prophet's bundled CmdStan when auto-discovery fails."""
+    stan_model_dir = Path(prophet_pkg.__file__).parent / "stan_model"
+    bundled_paths = sorted(stan_model_dir.glob("cmdstan-*"), reverse=True)
+
+    for cmdstan_path in bundled_paths:
+        try:
+            cmdstanpy.set_cmdstan_path(str(cmdstan_path))
+            return
+        except Exception:
+            continue
+
+
 def prepare_prophet_df(df: pd.DataFrame, date_col: str = "date", value_col: str = "revenue") -> pd.DataFrame:
     prophet_df = pd.DataFrame()
     prophet_df["ds"] = pd.to_datetime(df[date_col])
@@ -31,16 +46,28 @@ def prepare_prophet_df(df: pd.DataFrame, date_col: str = "date", value_col: str 
 def train(df: pd.DataFrame, date_col: str = "date", value_col: str = "revenue",
           branch_id: Optional[int] = None):
     prophet_df = prepare_prophet_df(df, date_col, value_col)
+    if prophet_df.empty:
+        raise ValueError("No valid revenue rows found for Prophet training.")
 
-    model = Prophet(
-        yearly_seasonality=True,
-        weekly_seasonality=True,
-        daily_seasonality=False,
-        seasonality_mode="multiplicative",
-        changepoint_prior_scale=0.05,
-        seasonality_prior_scale=10.0,
-        uncertainty_samples=1000,
-    )
+    configure_prophet_backend()
+
+    try:
+        model = Prophet(
+            yearly_seasonality=True,
+            weekly_seasonality=True,
+            daily_seasonality=False,
+            seasonality_mode="multiplicative",
+            changepoint_prior_scale=0.05,
+            seasonality_prior_scale=10.0,
+            uncertainty_samples=1000,
+        )
+    except AttributeError as exc:
+        if "stan_backend" not in str(exc):
+            raise
+        raise RuntimeError(
+            "Prophet could not initialize its Stan backend. Install the project "
+            "requirements again so Prophet 1.3+ and CmdStanPy are used together."
+        ) from exc
 
     model.add_country_holidays(country_name="PK")
 
