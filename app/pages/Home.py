@@ -378,6 +378,10 @@ else:
         if "is_fraud" in df.columns:
             fraud_n = int(df["is_fraud"].sum())
             legit_n = len(df) - fraud_n
+        else:
+            fraud_n = summary.get("fraud_count", 0)
+            legit_n = summary.get("total_rows", 0) - fraud_n
+        if fraud_n > 0 or legit_n > 0:
             fig = go.Figure(go.Pie(
                 labels=["Legitimate", "Fraudulent"],
                 values=[legit_n, fraud_n],
@@ -392,6 +396,10 @@ else:
         st.subheader("Fraud by Merchant Category")
         if "is_fraud" in df.columns and "merchant_category" in df.columns:
             fraud_merch = df[df["is_fraud"] == 1].groupby("merchant_category").size().reset_index(name="count")
+        else:
+            snap_fm = st.session_state.get("_snap_fraud_merchant", [])
+            fraud_merch = pd.DataFrame(snap_fm) if snap_fm else pd.DataFrame()
+        if not fraud_merch.empty:
             fig2 = go.Figure(go.Bar(
                 x=fraud_merch["merchant_category"],
                 y=fraud_merch["count"],
@@ -416,6 +424,14 @@ else:
                             .groupby("city")["is_churned"]
                             .mean() * 100).round(1).sort_values(ascending=False).reset_index()
             city_churn.columns = ["City", "Churn Rate %"]
+        else:
+            snap_cc = st.session_state.get("_snap_churn_city", [])
+            if snap_cc:
+                city_churn = pd.DataFrame(snap_cc).rename(columns={"city": "City", "churn_rate": "Churn Rate %"})
+                city_churn = city_churn.sort_values("Churn Rate %", ascending=False)
+            else:
+                city_churn = pd.DataFrame()
+        if not city_churn.empty:
             colors_churn = ["#c62828" if v > 25 else "#f57f17" if v > 15 else "#2e7d32"
                             for v in city_churn["Churn Rate %"]]
             fig3 = go.Figure(go.Bar(
@@ -437,8 +453,15 @@ else:
             daily = df.copy()
             daily["transaction_date"] = pd.to_datetime(daily["transaction_date"])
             daily_fraud = daily.groupby("transaction_date")["is_fraud"].sum().reset_index()
+            daily_fraud.columns = ["date", "count"]
+        else:
+            snap_df = st.session_state.get("_snap_daily_fraud", [])
+            daily_fraud = pd.DataFrame(snap_df) if snap_df else pd.DataFrame()
+            if not daily_fraud.empty:
+                daily_fraud["date"] = pd.to_datetime(daily_fraud["date"])
+        if not daily_fraud.empty:
             fig4 = go.Figure(go.Scatter(
-                x=daily_fraud["transaction_date"], y=daily_fraud["is_fraud"],
+                x=daily_fraud["date"], y=daily_fraud["count"],
                 fill="tozeroy", line=dict(color="#c62828", width=2),
                 fillcolor="rgba(198,40,40,0.08)"
             ))
