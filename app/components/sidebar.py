@@ -44,11 +44,13 @@ ROLE_PAGES = {
         ("💬", "nlp",  "NLP_Query"),
     ],
     "business_analyst": [
-        ("🏠", "home",   "Home"),
-        ("📤", "upload", "Data_Upload"),
-        ("💬", "nlp",    "NLP_Query"),
-        ("🚨", "fraud",  "Fraud_Detection"),
-        ("📉", "churn",  "Customer_Churn"),
+        ("🏠", "home",     "Home"),
+        ("📤", "upload",   "Data_Upload"),
+        ("💬", "nlp",      "NLP_Query"),
+        ("🚨", "fraud",    "Fraud_Detection"),
+        ("📉", "churn",    "Customer_Churn"),
+        ("📈", "forecast", "Revenue_Forecasting"),
+        ("🏢", "branches", "Branch_Comparison"),
     ],
 }
 
