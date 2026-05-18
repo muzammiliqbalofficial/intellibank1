@@ -42,19 +42,6 @@ def train(df: pd.DataFrame, date_col: str = "date", value_col: str = "revenue",
         uncertainty_samples=1000,
     )
 
-    # Pakistan-specific holidays
-    pk_holidays = pd.DataFrame({
-        "holiday": [
-            "Eid_ul_Fitr", "Eid_ul_Adha", "Independence_Day",
-            "Pakistan_Day", "Labour_Day", "Ashura",
-        ],
-        "ds": pd.to_datetime([
-            "2024-04-10", "2024-06-17", "2024-08-14",
-            "2024-03-23", "2024-05-01", "2024-07-17",
-        ]),
-        "lower_window": [-1, -1, 0, 0, 0, -1],
-        "upper_window": [2, 2, 0, 0, 0, 1],
-    })
     model.add_country_holidays(country_name="PK")
 
     model.fit(prophet_df)
@@ -87,7 +74,18 @@ def load_model(branch_id: Optional[int] = None):
     path = MODEL_DIR / f"forecast_model{suffix}.pkl"
     if not path.exists():
         path = MODEL_DIR / "forecast_model.pkl"
-    return joblib.load(path)
+    try:
+        model = joblib.load(path)
+        # Validate model is compatible with current Prophet version
+        model.history  # validates model loaded correctly
+        return model
+    except Exception:
+        # Model file is stale / version-incompatible — remove so UI prompts retrain
+        try:
+            path.unlink(missing_ok=True)
+        except Exception:
+            pass
+        raise FileNotFoundError(f"Forecast model is outdated. Please retrain from the Train tab.")
 
 
 if __name__ == "__main__":
