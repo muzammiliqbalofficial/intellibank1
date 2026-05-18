@@ -4,6 +4,11 @@ Dataset: UCI Bank Marketing + transaction history
 """
 import pandas as pd
 import numpy as np
+
+# Prophet uses np.float_ which was removed in NumPy 2.0
+if not hasattr(np, "float_"):
+    np.float_ = np.float64
+
 from prophet import Prophet
 from prophet.diagnostics import cross_validation, performance_metrics
 import joblib

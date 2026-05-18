@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
 from typing import Optional
+
+if not hasattr(np, "float_"):
+    np.float_ = np.float64
+
 from ml.forecast.train import load_model
 
 _models = {}
