@@ -115,7 +115,7 @@ with left:
                                     justify-content:center; margin-right:12px; font-size:1.1rem;">💬</div>
                         <div>
                             <div style="color:white; font-weight:600; font-size:0.9rem;">NLP Query</div>
-                            <div style="color:rgba(255,255,255,0.6); font-size:0.78rem;">Gemini AI · English & Urdu</div>
+                            <div style="color:rgba(255,255,255,0.6); font-size:0.78rem;">OpenAI API · English & Urdu</div>
                         </div>
                     </div>
                 </div>
