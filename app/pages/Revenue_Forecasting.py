@@ -36,51 +36,67 @@ with tab1:
         show_components = st.toggle("Show Trend Components", value=False)
 
     try:
+        import ml.forecast.predict as _fp_mod
+        _fp_mod._models.clear()          # clear cached model so re-trains are picked up
         from ml.forecast.predict import forecast, forecast_summary
         summary = forecast_summary(periods=forecast_days)
         forecast_df = pd.DataFrame(forecast(periods=forecast_days))
         forecast_df["date"] = pd.to_datetime(forecast_df["date"])
 
+        today = datetime.now()
+        hist   = forecast_df[forecast_df["date"] <= today]
+        future = forecast_df[forecast_df["date"] >  today]
+
+        # Warn if the model was trained on old data
+        if not future.empty:
+            last_train = hist["date"].max() if not hist.empty else forecast_df["date"].min()
+            months_old = (today - last_train).days // 30
+            if months_old > 3:
+                st.warning(
+                    f"Model was trained on data from "
+                    f"{hist['date'].min().strftime('%b %Y')} to "
+                    f"{last_train.strftime('%b %Y')}. "
+                    f"Re-train on recent data for better accuracy."
+                )
+
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Total Forecast Revenue", f"PKR {summary['total_forecast_revenue']/1e6:.2f}M")
-        m2.metric("Avg Daily Revenue", f"PKR {summary['avg_daily_revenue']:,.0f}")
-        m3.metric("Peak Day Revenue", f"PKR {summary['peak_revenue']:,.0f}",
+        m2.metric("Avg Daily Revenue",       f"PKR {summary['avg_daily_revenue']:,.0f}")
+        m3.metric("Peak Day Revenue",        f"PKR {summary['peak_revenue']:,.0f}",
                   delta=f"on {summary['peak_day']}")
-        m4.metric("Growth Rate", f"{summary['growth_rate_pct']:+.1f}%")
+        m4.metric("Growth Rate",             f"{summary['growth_rate_pct']:+.1f}%")
 
         st.markdown("---")
 
         fig = go.Figure()
-        today = datetime.now()
-        hist = forecast_df[forecast_df["date"] <= today]
-        future = forecast_df[forecast_df["date"] > today]
-
-        fig.add_trace(go.Scatter(
-            x=hist["date"], y=hist["forecast"],
-            name="Historical", line=dict(color="#1a237e", width=2),
-        ))
-        fig.add_trace(go.Scatter(
-            x=future["date"], y=future["forecast"],
-            name="Forecast", line=dict(color="#f9a825", width=2, dash="dash"),
-        ))
-
-        if show_intervals and "lower_bound" in forecast_df.columns:
+        if not hist.empty:
             fig.add_trace(go.Scatter(
-                x=pd.concat([future["date"], future["date"][::-1]]),
-                y=pd.concat([future["upper_bound"], future["lower_bound"][::-1]]),
-                fill="toself", fillcolor="rgba(249,168,37,0.15)",
-                line=dict(color="rgba(255,255,255,0)"),
-                name="95% Confidence Interval",
+                x=hist["date"], y=hist["forecast"],
+                name="Historical (model fit)", line=dict(color="#1a237e", width=2),
             ))
+        if not future.empty:
+            fig.add_trace(go.Scatter(
+                x=future["date"], y=future["forecast"],
+                name=f"Forecast ({forecast_days} days)", line=dict(color="#f9a825", width=2, dash="dash"),
+            ))
+            if show_intervals and "lower_bound" in forecast_df.columns:
+                fig.add_trace(go.Scatter(
+                    x=pd.concat([future["date"], future["date"][::-1]]),
+                    y=pd.concat([future["upper_bound"], future["lower_bound"][::-1]]),
+                    fill="toself", fillcolor="rgba(249,168,37,0.15)",
+                    line=dict(color="rgba(255,255,255,0)"),
+                    name="95% Confidence Interval",
+                ))
 
         fig.add_vline(x=today, line_dash="dash", line_color="grey",
                       annotation_text="Today", annotation_position="top")
         fig.update_layout(
-            height=400, title="Revenue Forecast",
+            height=420, title="Revenue Forecast",
             xaxis_title="Date", yaxis_title="Revenue (PKR)",
             legend=dict(orientation="h", yanchor="bottom", y=1.02),
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
             hovermode="x unified",
+            xaxis=dict(showgrid=False), yaxis=dict(gridcolor="#f0f0f0"),
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -88,20 +104,24 @@ with tab1:
             comp_c1, comp_c2 = st.columns(2)
             with comp_c1:
                 fig_trend = px.line(forecast_df, x="date", y="trend",
-                                    title="Trend Component", color_discrete_sequence=["#1a237e"])
+                                    title="Trend Component",
+                                    color_discrete_sequence=["#1a237e"])
                 fig_trend.update_layout(height=250, paper_bgcolor="rgba(0,0,0,0)",
                                         plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig_trend, use_container_width=True)
             with comp_c2:
                 if "weekly_seasonality" in forecast_df.columns:
-                    fig_weekly = px.line(forecast_df.head(30), x="date", y="weekly_seasonality",
-                                        title="Weekly Seasonality", color_discrete_sequence=["#f9a825"])
+                    fig_weekly = px.line(forecast_df.tail(60), x="date",
+                                         y="weekly_seasonality",
+                                         title="Weekly Seasonality",
+                                         color_discrete_sequence=["#f9a825"])
                     fig_weekly.update_layout(height=250, paper_bgcolor="rgba(0,0,0,0)",
                                              plot_bgcolor="rgba(0,0,0,0)")
                     st.plotly_chart(fig_weekly, use_container_width=True)
 
         with st.expander("Forecast Data Table"):
-            future_table = future[["date", "forecast", "lower_bound", "upper_bound"]].copy()
+            show_df = future if not future.empty else forecast_df.tail(forecast_days)
+            future_table = show_df[["date", "forecast", "lower_bound", "upper_bound"]].copy()
             future_table.columns = ["Date", "Forecast (PKR)", "Lower Bound", "Upper Bound"]
             st.dataframe(future_table, use_container_width=True)
             st.download_button("Download Forecast CSV", future_table.to_csv(index=False),
@@ -141,11 +161,13 @@ with tab2:
                 with st.spinner("Training Prophet model..."):
                     try:
                         from ml.forecast.train import train as forecast_train
+                        import ml.forecast.predict as _fp_mod
                         _, metrics = forecast_train(rev_df, date_col="date", value_col="revenue")
+                        _fp_mod._models.clear()   # force reload on next forecast call
                         st.success("Revenue forecast model trained successfully!")
                         if metrics:
                             c1, c2 = st.columns(2)
-                            c1.metric("MAE", f"{metrics.get('mae', 0):,.0f}")
+                            c1.metric("MAE",  f"{metrics.get('mae', 0):,.0f}")
                             c2.metric("MAPE", f"{metrics.get('mape', 0):.2%}")
                         st.info("Go to **Forecast Dashboard** tab to view predictions.")
                     except Exception as e:

@@ -15,8 +15,15 @@ def _get_model(branch_id: Optional[int] = None):
 
 def forecast(periods: int = 30, freq: str = "D",
              branch_id: Optional[int] = None) -> pd.DataFrame:
+    from datetime import datetime
     model = _get_model(branch_id)
-    future = model.make_future_dataframe(periods=periods, freq=freq)
+
+    # If the model was trained on old data, extend enough to reach today + periods
+    last_train_date = model.history["ds"].max()
+    days_since_training = max(0, (datetime.now() - last_train_date).days)
+    total_periods = days_since_training + periods
+
+    future = model.make_future_dataframe(periods=total_periods, freq=freq)
     forecast_df = model.predict(future)
 
     result = forecast_df[["ds", "yhat", "yhat_lower", "yhat_upper",
