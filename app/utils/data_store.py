@@ -101,9 +101,27 @@ def save_snapshot(filename: str, user_id: int = None):
     try:
         from db.connection import SessionLocal
         from db.models import DataSnapshot
-        summary  = get_summary()
+        df       = get_dataset()
+        summary  = get_summary().copy()
         rev_df   = get_revenue_df()
         br_df    = get_branch_df()
+
+        # Store chart-level aggregations so other sessions can render charts
+        if not df.empty:
+            if "is_fraud" in df.columns and "merchant_category" in df.columns:
+                fm = df[df["is_fraud"] == 1].groupby("merchant_category").size().reset_index(name="count")
+                summary["_fraud_merchant"] = fm.to_dict("records")
+            if "is_fraud" in df.columns and "transaction_date" in df.columns:
+                dd = df.groupby("transaction_date")["is_fraud"].sum().reset_index()
+                dd.columns = ["date", "count"]
+                dd["date"] = dd["date"].astype(str)
+                summary["_daily_fraud"] = dd.to_dict("records")
+            if "is_churned" in df.columns and "city" in df.columns and "customer_id" in df.columns:
+                cc = (df.drop_duplicates("customer_id")
+                        .groupby("city")["is_churned"].mean() * 100).round(1).reset_index()
+                cc.columns = ["city", "churn_rate"]
+                summary["_churn_city"] = cc.to_dict("records")
+
         db = SessionLocal()
         db.query(DataSnapshot).delete()
         snap = DataSnapshot(
@@ -132,11 +150,14 @@ def load_snapshot() -> bool:
         snap = db.query(DataSnapshot).order_by(DataSnapshot.created_at.desc()).first()
         db.close()
         if snap and snap.summary_json:
-            st.session_state["data_loaded"]       = True
-            st.session_state["data_summary"]      = snap.summary_json
-            st.session_state["_snap_revenue"]     = snap.revenue_json or []
-            st.session_state["_snap_branch"]      = snap.branch_json or []
-            st.session_state["_snap_only"]        = True
+            st.session_state["data_loaded"]          = True
+            st.session_state["data_summary"]         = snap.summary_json
+            st.session_state["_snap_revenue"]        = snap.revenue_json or []
+            st.session_state["_snap_branch"]         = snap.branch_json or []
+            st.session_state["_snap_only"]           = True
+            st.session_state["_snap_fraud_merchant"] = snap.summary_json.get("_fraud_merchant", [])
+            st.session_state["_snap_daily_fraud"]    = snap.summary_json.get("_daily_fraud", [])
+            st.session_state["_snap_churn_city"]     = snap.summary_json.get("_churn_city", [])
             return True
     except Exception:
         pass
