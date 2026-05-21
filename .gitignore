@@ -1,8 +1,6 @@
 ﻿.env
 __pycache__/
 *.pyc
-*.pkl
 *.joblib
-ml/*/artifacts/
 *.egg-info/
 .streamlit/secrets.toml

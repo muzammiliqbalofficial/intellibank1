@@ -114,8 +114,9 @@ if role == "admin":
                     hole=0.45, textinfo="percent+label",
                 ))
                 fig.update_layout(height=300, margin=dict(l=0,r=0,t=10,b=0),
-                                  paper_bgcolor="rgba(0,0,0,0)", showlegend=False)
-                st.plotly_chart(fig, use_container_width=True)
+                                  paper_bgcolor="rgba(0,0,0,0)", showlegend=False,
+                                  clickmode='none')
+                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     # ── Tab 2: Add User ───────────────────────────────────────────────────────
     with tab2:
@@ -257,8 +258,9 @@ elif role == "bank_manager":
                     hole=0.5, textinfo="percent+label"
                 ))
                 fig_f.update_layout(height=250, margin=dict(l=0,r=0,t=10,b=0),
-                                    showlegend=False, paper_bgcolor="rgba(0,0,0,0)")
-                st.plotly_chart(fig_f, use_container_width=True)
+                                    showlegend=False, paper_bgcolor="rgba(0,0,0,0)",
+                                    clickmode='none')
+                st.plotly_chart(fig_f, use_container_width=True, config={"displayModeBar": False})
                 st.markdown(f"**{fraud_n:,}** fraudulent out of **{len(df):,}** total transactions")
 
         with r2:
@@ -389,8 +391,9 @@ else:
                 hole=0.5, textinfo="percent+label", textfont=dict(size=12)
             ))
             fig.update_layout(height=300, margin=dict(l=0,r=0,t=10,b=0),
-                              showlegend=False, paper_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(fig, use_container_width=True)
+                              showlegend=False, paper_bgcolor="rgba(0,0,0,0)",
+                              clickmode='none')
+            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     with col_r:
         st.subheader("Fraud by Merchant Category")

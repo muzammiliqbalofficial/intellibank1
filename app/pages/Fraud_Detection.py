@@ -222,25 +222,135 @@ with tab3:
 
 # ─── Tab 4: Model Insights ────────────────────────────────────────────────────
 with tab4:
-    st.subheader("Model Performance & Monitoring")
+    st.subheader("Model Verification — How We Know It Works")
     try:
         import json
         from pathlib import Path
         metrics_path = Path("ml/fraud/artifacts/fraud_metrics.json")
-        if metrics_path.exists():
-            with open(metrics_path) as f:
-                metrics = json.load(f)
-            col1, col2 = st.columns(2)
-            col1.metric("ROC-AUC", f"{metrics.get('roc_auc', 0):.4f}")
-            col2.metric("Avg Precision", f"{metrics.get('avg_precision', 0):.4f}")
-
-            st.markdown("#### Classification Report")
-            if "classification_report" in metrics:
-                st.text(metrics["classification_report"])
+        if not metrics_path.exists():
+            st.info("Train the model first (Data Upload page) to see verification metrics.")
         else:
-            st.info("Train the model first to see performance metrics.")
+            with open(metrics_path) as f:
+                m = json.load(f)
+
+            # ── Methodology note ──────────────────────────────────────────────
+            n_train = m.get("n_train", 0)
+            n_test  = m.get("n_test",  0)
+            st.info(
+                f"**Verification methodology:** The model was trained on **{n_train:,}** transactions "
+                f"and evaluated on a completely separate **{n_test:,}** test set "
+                f"(20% hold-out — the model never saw these during training). "
+                f"All metrics below come from this independent test set."
+            )
+
+            # ── KPI row ───────────────────────────────────────────────────────
+            k1, k2, k3, k4 = st.columns(4)
+            k1.metric("ROC-AUC",       f"{m.get('roc_auc', 0):.4f}",
+                      help="1.0 = perfect, 0.5 = random guessing")
+            k2.metric("Avg Precision", f"{m.get('avg_precision', 0):.4f}",
+                      help="Area under Precision-Recall curve")
+            cr = m.get("classification_report", {})
+            k3.metric("Fraud Recall",
+                      f"{cr.get('1', {}).get('recall', 0):.1%}",
+                      help="% of actual fraud cases that were caught")
+            k4.metric("Fraud Precision",
+                      f"{cr.get('1', {}).get('precision', 0):.1%}",
+                      help="% of fraud alerts that were real fraud")
+
+            st.markdown("---")
+
+            col_cm, col_roc = st.columns(2)
+
+            # ── Confusion Matrix ──────────────────────────────────────────────
+            with col_cm:
+                st.markdown("#### Confusion Matrix")
+                st.caption("Rows = Actual label · Columns = Predicted label")
+                cm = m.get("confusion_matrix")
+                if cm:
+                    tn, fp, fn, tp = cm[0][0], cm[0][1], cm[1][0], cm[1][1]
+                    fig_cm = go.Figure(go.Heatmap(
+                        z=[[tn, fp], [fn, tp]],
+                        x=["Predicted Legit", "Predicted Fraud"],
+                        y=["Actual Legit",    "Actual Fraud"],
+                        text=[[f"TN\n{tn}", f"FP\n{fp}"],
+                              [f"FN\n{fn}", f"TP\n{tp}"]],
+                        texttemplate="%{text}",
+                        textfont=dict(size=16, color="white"),
+                        colorscale=[[0, "#1a237e"], [0.5, "#1565c0"], [1, "#c62828"]],
+                        showscale=False,
+                    ))
+                    fig_cm.update_layout(
+                        height=280, margin=dict(l=0, r=0, t=10, b=0),
+                        paper_bgcolor="rgba(0,0,0,0)",
+                    )
+                    st.plotly_chart(fig_cm, use_container_width=True,
+                                    config={"displayModeBar": False})
+                    st.caption(
+                        f"✅ **{tp} fraud correctly caught** (True Positives)  "
+                        f"· ❌ {fn} fraud missed (False Negatives)  "
+                        f"· ⚠️ {fp} false alarms (False Positives)"
+                    )
+
+            # ── ROC Curve ─────────────────────────────────────────────────────
+            with col_roc:
+                st.markdown("#### ROC Curve")
+                st.caption("Closer the curve is to top-left corner, better the model")
+                roc = m.get("roc_curve")
+                if roc:
+                    auc_val = m.get("roc_auc", 0)
+                    fig_roc = go.Figure()
+                    fig_roc.add_trace(go.Scatter(
+                        x=roc["fpr"], y=roc["tpr"],
+                        mode="lines",
+                        name=f"Fraud Model (AUC={auc_val:.3f})",
+                        line=dict(color="#c62828", width=2.5),
+                        fill="tozeroy", fillcolor="rgba(198,40,40,0.08)",
+                    ))
+                    fig_roc.add_trace(go.Scatter(
+                        x=[0, 1], y=[0, 1],
+                        mode="lines", name="Random (AUC=0.5)",
+                        line=dict(color="#9e9e9e", width=1.5, dash="dash"),
+                    ))
+                    fig_roc.update_layout(
+                        height=280, margin=dict(l=0, r=0, t=10, b=0),
+                        xaxis_title="False Positive Rate",
+                        yaxis_title="True Positive Rate",
+                        legend=dict(orientation="h", y=0.05, x=0.4),
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        xaxis=dict(gridcolor="#f0f0f0"),
+                        yaxis=dict(gridcolor="#f0f0f0"),
+                    )
+                    st.plotly_chart(fig_roc, use_container_width=True,
+                                    config={"displayModeBar": False})
+
+            # ── Per-class Report ──────────────────────────────────────────────
+            if cr:
+                st.markdown("---")
+                st.markdown("#### Detailed Classification Report (Test Set)")
+                report_data = {
+                    "Class":     ["Legitimate (0)", "Fraudulent (1)", "Weighted Avg"],
+                    "Precision": [f"{cr.get('0',{}).get('precision',0):.1%}",
+                                  f"{cr.get('1',{}).get('precision',0):.1%}",
+                                  f"{cr.get('weighted avg',{}).get('precision',0):.1%}"],
+                    "Recall":    [f"{cr.get('0',{}).get('recall',0):.1%}",
+                                  f"{cr.get('1',{}).get('recall',0):.1%}",
+                                  f"{cr.get('weighted avg',{}).get('recall',0):.1%}"],
+                    "F1-Score":  [f"{cr.get('0',{}).get('f1-score',0):.1%}",
+                                  f"{cr.get('1',{}).get('f1-score',0):.1%}",
+                                  f"{cr.get('weighted avg',{}).get('f1-score',0):.1%}"],
+                    "Support":   [int(cr.get('0',{}).get('support',0)),
+                                  int(cr.get('1',{}).get('support',0)),
+                                  int(cr.get('weighted avg',{}).get('support',0))],
+                }
+                st.dataframe(pd.DataFrame(report_data), use_container_width=True, hide_index=True)
+                st.caption(
+                    "**Precision** = when model says fraud, how often is it right?  "
+                    "**Recall** = of all real fraud, how many did we catch?  "
+                    "**F1** = balance between precision and recall."
+                )
 
     except Exception as e:
-        st.error(str(e))
+        st.error(f"Error loading metrics: {str(e)}")
 
 render_footer()

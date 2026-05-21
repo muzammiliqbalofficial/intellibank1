@@ -7,7 +7,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import (classification_report, confusion_matrix,
-                              roc_auc_score, precision_recall_curve, average_precision_score)
+                              roc_auc_score, precision_recall_curve, average_precision_score,
+                              roc_curve)
 from imblearn.over_sampling import SMOTE
 import xgboost as xgb
 import joblib
@@ -100,13 +101,32 @@ def train(df: pd.DataFrame, target_col: str = "is_fraud"):
     y_pred = model.predict(X_test_scaled)
     y_prob = model.predict_proba(X_test_scaled)[:, 1]
 
+    # ROC curve (downsample to 60 pts so JSON stays small)
+    fpr, tpr, _ = roc_curve(y_test, y_prob)
+    step = max(1, len(fpr) // 60)
+    roc_data = {"fpr": fpr[::step].tolist(), "tpr": tpr[::step].tolist()}
+
+    # Precision-Recall curve
+    prec, rec, _ = precision_recall_curve(y_test, y_prob)
+    step2 = max(1, len(prec) // 60)
+    pr_data = {"precision": prec[::step2].tolist(), "recall": rec[::step2].tolist()}
+
+    # Confusion matrix
+    cm = confusion_matrix(y_test, y_pred)
+
     metrics = {
-        "roc_auc": float(roc_auc_score(y_test, y_prob)),
-        "avg_precision": float(average_precision_score(y_test, y_prob)),
+        "roc_auc":               float(roc_auc_score(y_test, y_prob)),
+        "avg_precision":         float(average_precision_score(y_test, y_prob)),
         "classification_report": classification_report(y_test, y_pred, output_dict=True),
-        "feature_names": feature_cols,
-        "n_train": len(X_train_res),
-        "n_test": len(X_test),
+        "confusion_matrix":      cm.tolist(),
+        "roc_curve":             roc_data,
+        "pr_curve":              pr_data,
+        "feature_names":         feature_cols,
+        "n_train":               len(X_train),
+        "n_test":                len(X_test),
+        "n_train_after_smote":   len(X_train_res),
+        "test_fraud_count":      int(y_test.sum()),
+        "test_legit_count":      int((y_test == 0).sum()),
     }
 
     print(f"Fraud Model — ROC-AUC: {metrics['roc_auc']:.4f} | Avg Precision: {metrics['avg_precision']:.4f}")
@@ -117,7 +137,7 @@ def train(df: pd.DataFrame, target_col: str = "is_fraud"):
     with open(MODEL_DIR / "fraud_features.json", "w") as f:
         json.dump(feature_cols, f)
     with open(MODEL_DIR / "fraud_metrics.json", "w") as f:
-        json.dump({k: v for k, v in metrics.items() if k != "classification_report"}, f)
+        json.dump(metrics, f)
 
     return model, scaler, metrics
 
