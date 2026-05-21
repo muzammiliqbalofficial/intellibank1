@@ -1,0 +1,1 @@
+["transaction_id", "customer_id", "branch_code", "amount", "merchant_category", "transaction_type", "hour", "day_of_week", "is_weekend", "age", "gender", "city", "credit_score", "tenure_years", "account_balance", "estimated_salary", "num_products", "has_credit_card", "is_active_member", "is_churned", "tenure", "balance", "geography", "log_amount", "amount_zscore"]

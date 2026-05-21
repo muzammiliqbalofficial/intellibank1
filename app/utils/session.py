@@ -58,11 +58,11 @@ def _restore_from_url():
 
 def login(token: str, user_data: dict):
     st.session_state.authenticated = True
-    st.session_state.token = token
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    st.session_state.token = token_hash  # always store hash for consistent reload restore
     st.session_state.user = user_data
     st.session_state.theme    = user_data.get("theme_preference", "light")
     st.session_state.language = user_data.get("preferred_language", "en")
-    token_hash = hashlib.sha256(token.encode()).hexdigest()
     st.query_params["_s"] = token_hash
 
 
@@ -78,6 +78,11 @@ def require_auth():
     init_session()
     if not st.session_state.get("authenticated"):
         st.switch_page("main.py")
+    # Re-stamp _s in the URL on every page load so that a browser reload
+    # still finds the session even after st.switch_page() dropped the params.
+    token = st.session_state.get("token")
+    if token and not st.query_params.get("_s"):
+        st.query_params["_s"] = token
     return st.session_state.user
 
 

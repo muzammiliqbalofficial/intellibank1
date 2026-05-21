@@ -22,13 +22,82 @@ def apply_theme(theme: str = "light"):
     if theme == "dark":
         st.markdown("""
         <style>
+        /* ── Backgrounds ── */
         .stApp { background-color: #0f1117 !important; }
-        .main .block-container { background-color: #0f1117; }
-        .metric-card { background: #1e2130 !important; border-color: #f9a825; }
+        .main .block-container { background-color: #0f1117 !important; }
+
+        /* ── Body text ── */
+        .stApp p,
+        .stApp li,
+        [data-testid="stMarkdownContainer"] p,
+        [data-testid="stMarkdownContainer"] li { color: #e0e0e0 !important; }
+
+        /* ── Headings ── */
+        .stApp h1, .stApp h2, .stApp h3, .stApp h4,
+        [data-testid="stMarkdownContainer"] h1,
+        [data-testid="stMarkdownContainer"] h2,
+        [data-testid="stMarkdownContainer"] h3,
+        [data-testid="stHeadingWithActionElements"] { color: #ffffff !important; }
+
+        /* ── Captions & secondary text ── */
+        [data-testid="stText"],
+        [data-testid="stCaption"] { color: #b0b0b0 !important; }
+
+        /* ── Form labels ── */
+        .stApp label,
+        [data-testid="stTextInput"] label,
+        [data-testid="stNumberInput"] label,
+        [data-testid="stSelectbox"] label,
+        [data-testid="stSlider"] label,
+        [data-testid="stRadio"] label,
+        [data-testid="stCheckbox"] label,
+        [data-testid="stTextArea"] label,
+        [data-testid="stFileUploader"] label { color: #e0e0e0 !important; }
+
+        /* ── Input fields ── */
+        .stTextInput input,
+        .stNumberInput input,
+        .stTextArea textarea {
+            background-color: #1e2130 !important;
+            color: #e0e0e0 !important;
+            border-color: #3a3d4e !important;
+        }
+
+        /* ── Select boxes ── */
+        [data-baseweb="select"] div,
+        [data-baseweb="select"] span { color: #e0e0e0 !important; }
+
+        /* ── Tabs ── */
+        [data-baseweb="tab"] { color: #b0b0b0 !important; }
+        [aria-selected="true"][data-baseweb="tab"] { color: #ffffff !important; }
+        [data-baseweb="tab-list"] { background-color: #1e2130 !important; }
+
+        /* ── Custom metric cards ── */
+        .metric-card { background: #1e2130 !important; border-color: #f9a825 !important; }
         .metric-card .metric-value { color: #90caf9 !important; }
         .metric-card .metric-label { color: #9e9e9e !important; }
         .info-card { background: #1e2130 !important; border-color: #2a2d3e !important; }
+
+        /* ── Streamlit metric widget ── */
+        [data-testid="stMetricValue"] { color: #90caf9 !important; }
+        [data-testid="stMetricLabel"] { color: #b0b0b0 !important; }
+
+        /* ── Dividers & form borders ── */
+        hr { border-color: #2a2d3e !important; }
+        [data-testid="stForm"] { border-color: #2a2d3e !important; }
+
+        /* ── Alert boxes ── */
+        [data-testid="stAlert"] { background-color: #1e2130 !important; color: #e0e0e0 !important; }
+
+        /* ── DataFrames ── */
         .stDataFrame { filter: invert(0.9) hue-rotate(180deg); }
+
+        /* ── Page header (custom component) ── */
+        .page-header h1 { color: #ffffff !important; }
+        .page-header p  { color: #b0b0b0 !important; }
+
+        /* ── Footer ── */
+        .footer { color: #9e9e9e !important; border-color: #2a2d3e !important; }
         </style>
         """, unsafe_allow_html=True)
 
