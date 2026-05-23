@@ -63,9 +63,23 @@ def apply_theme(theme: str = "light"):
             border-color: #3a3d4e !important;
         }
 
-        /* ── Select boxes ── */
+        /* ── Select boxes (main content area) ── */
         [data-baseweb="select"] div,
         [data-baseweb="select"] span { color: #e0e0e0 !important; }
+        [data-baseweb="select"] > div { background-color: #1e2130 !important; border-color: #3a3d4e !important; }
+
+        /* ── Sidebar selectbox (lang/theme toggles) ── */
+        [data-testid="stSidebar"] [data-baseweb="select"] > div {
+            background-color: rgba(255,255,255,0.12) !important;
+            border-color: rgba(255,255,255,0.25) !important;
+        }
+        [data-testid="stSidebar"] [data-baseweb="select"] div,
+        [data-testid="stSidebar"] [data-baseweb="select"] span,
+        [data-testid="stSidebar"] [data-baseweb="select"] svg { color: #ffffff !important; fill: #ffffff !important; }
+        [data-baseweb="popover"] li,
+        [data-baseweb="menu"] li { background-color: #1e2130 !important; color: #e0e0e0 !important; }
+        [data-baseweb="popover"] li:hover,
+        [data-baseweb="menu"] li:hover { background-color: #2a2d3e !important; }
 
         /* ── Tabs ── */
         [data-baseweb="tab"] { color: #b0b0b0 !important; }

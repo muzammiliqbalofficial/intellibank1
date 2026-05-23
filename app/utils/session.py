@@ -1,4 +1,5 @@
 import hashlib
+import time
 from datetime import datetime
 import streamlit as st
 from db.connection import SessionLocal
@@ -27,33 +28,39 @@ def _restore_from_url():
     token_hash = st.query_params.get("_s", "")
     if not token_hash:
         return
-    try:
-        db = SessionLocal()
-        session = db.query(UserSession).filter(
-            UserSession.token_hash == token_hash,
-            UserSession.is_active == True,
-            UserSession.expires_at > datetime.utcnow()
-        ).first()
-        if session:
-            user = db.query(User).filter(User.id == session.user_id).first()
-            if user:
-                st.session_state.authenticated = True
-                st.session_state.token = token_hash
-                st.session_state.user = {
-                    "id":                 user.id,
-                    "username":           user.username,
-                    "email":              user.email,
-                    "full_name":          user.full_name or user.username,
-                    "role":               user.role.value,
-                    "branch_id":          user.branch_id,
-                    "preferred_language": user.preferred_language or "en",
-                    "theme_preference":   user.theme_preference or "light",
-                }
-                st.session_state.theme    = user.theme_preference or "light"
-                st.session_state.language = user.preferred_language or "en"
-        db.close()
-    except Exception:
-        pass
+
+    # Retry up to 3 times to handle Neon serverless cold-start latency
+    for attempt in range(3):
+        try:
+            db = SessionLocal()
+            session = db.query(UserSession).filter(
+                UserSession.token_hash == token_hash,
+                UserSession.is_active == True,
+                UserSession.expires_at > datetime.utcnow()
+            ).first()
+            if session:
+                user = db.query(User).filter(User.id == session.user_id).first()
+                if user:
+                    st.session_state.authenticated = True
+                    st.session_state.token = token_hash
+                    st.session_state.user = {
+                        "id":                 user.id,
+                        "username":           user.username,
+                        "email":              user.email,
+                        "full_name":          user.full_name or user.username,
+                        "role":               user.role.value,
+                        "branch_id":          user.branch_id,
+                        "preferred_language": user.preferred_language or "en",
+                        "theme_preference":   user.theme_preference or "light",
+                    }
+                    st.session_state.theme    = user.theme_preference or "light"
+                    st.session_state.language = user.preferred_language or "en"
+            db.close()
+            return  # success — exit retry loop
+        except Exception:
+            if attempt < 2:
+                time.sleep(1)  # wait 1s before retry on cold-start failure
+            # on final attempt, silently give up
 
 
 def login(token: str, user_data: dict):

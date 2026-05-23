@@ -14,20 +14,36 @@ def _get_explainer(rf_model):
 def explain_churn_prediction(X_scaled: np.ndarray, rf_model, feature_names: list) -> dict:
     explainer = _get_explainer(rf_model)
     shap_values = explainer.shap_values(X_scaled)
+    feature_names = list(feature_names)
 
-    # RF returns list [class0, class1]
-    sv = shap_values[1][0] if isinstance(shap_values, list) else shap_values[0]
+    # Handle different SHAP versions and RF output formats
+    if isinstance(shap_values, list):
+        # Classic format: list of arrays per class
+        raw = shap_values[1] if len(shap_values) > 1 else shap_values[0]
+        sv = np.array(raw[0] if raw.ndim == 2 else raw, dtype=float)
+    elif hasattr(shap_values, 'values'):
+        # Explanation object (SHAP >= 0.41)
+        vals = shap_values.values
+        sv = np.array(vals[0, :, 1] if vals.ndim == 3 else vals[0], dtype=float)
+    else:
+        arr = np.array(shap_values, dtype=float)
+        if arr.ndim == 3:
+            sv = arr[0, :, 1]
+        elif arr.ndim == 2:
+            sv = arr[0]
+        else:
+            sv = arr
 
     abs_sv = np.abs(sv)
     top_idx = np.argsort(abs_sv)[::-1][:10]
 
     top_features = [
         {
-            "feature": feature_names[i],
-            "shap_value": round(float(sv[i]), 4),
-            "abs_impact": round(float(abs_sv[i]), 4),
-            "direction": "increases_churn_risk" if sv[i] > 0 else "decreases_churn_risk",
-            "readable": _readable_feature(feature_names[i], sv[i]),
+            "feature": feature_names[int(i)],
+            "shap_value": round(float(sv[int(i)]), 4),
+            "abs_impact": round(float(abs_sv[int(i)]), 4),
+            "direction": "increases_churn_risk" if sv[int(i)] > 0 else "decreases_churn_risk",
+            "readable": _readable_feature(feature_names[int(i)], sv[int(i)]),
         }
         for i in top_idx
     ]
