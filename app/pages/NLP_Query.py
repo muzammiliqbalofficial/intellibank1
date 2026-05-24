@@ -1,6 +1,7 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import json
 import streamlit as st
 import pandas as pd
 
@@ -71,7 +72,7 @@ if submit and query:
                 detected_language=result.get("detected_language"),
                 translated_query=result.get("translated_query"),
                 generated_sql=result.get("generated_sql"),
-                query_result=result.get("query_result"),
+                query_result=json.loads(json.dumps(result.get("query_result", []), default=str)),
                 result_row_count=result.get("result_row_count", 0),
                 execution_time_ms=result.get("execution_time_ms"),
                 is_successful=result.get("is_successful", False),
