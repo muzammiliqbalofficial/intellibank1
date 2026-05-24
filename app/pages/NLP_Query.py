@@ -107,6 +107,8 @@ if submit and query:
             </div>""",
             unsafe_allow_html=True,
         )
+    elif result.get("nl_answer_error"):
+        st.warning(f"AI answer failed: {result['nl_answer_error']}")
 
     # ── Results ────────────────────────────────────────────────────────────────
     if result.get("is_successful") and result.get("query_result"):

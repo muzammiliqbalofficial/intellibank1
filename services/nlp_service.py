@@ -164,8 +164,8 @@ def execute_nlp_query(query: str, db_session) -> dict:
                 nl_answer = _generate_nl_answer(
                     query, data, result.get("detected_language", "en")
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                result["nl_answer_error"] = str(e)
     except Exception as e:
         result["is_successful"] = False
         result["error_message"] = str(e)
