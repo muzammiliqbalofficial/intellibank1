@@ -96,6 +96,17 @@ if submit and query:
         f"{result.get('result_row_count', 0):,} rows returned"
     )
 
+    # ── Natural language answer ────────────────────────────────────────────────
+    nl_answer = result.get("nl_answer")
+    if nl_answer:
+        st.markdown(
+            f"""<div style="background:#e8f4fd;border-left:4px solid #1a237e;
+                padding:16px 20px;border-radius:8px;margin:12px 0;line-height:1.7;">
+                🤖 <strong>IntelliBank AI:</strong><br><br>{nl_answer}
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
     # ── Results ────────────────────────────────────────────────────────────────
     if result.get("is_successful") and result.get("query_result"):
         df_result = pd.DataFrame(result["query_result"])

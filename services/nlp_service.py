@@ -7,6 +7,13 @@ from langdetect import detect
 from deep_translator import GoogleTranslator
 from config.settings import settings
 
+ANSWER_PROMPT = """You are IntelliBank's banking data analyst assistant.
+The user asked a question and you have the database results.
+Write a clear, concise conversational answer (2-4 sentences) summarising the key insights.
+Use specific numbers from the data. Be direct and professional.
+If results are empty, say so clearly.
+Do NOT mention SQL or technical details. Respond in the same language as the user's question."""
+
 SYSTEM_PROMPT = """You are IntelliBank's SQL query generator. Convert natural language questions about banking data into PostgreSQL queries.
 
 Database schema:
@@ -74,6 +81,28 @@ def _generate_sql_groq(query: str) -> str:
     return sql
 
 
+def _generate_nl_answer(original_query: str, sql_data: list, detected_lang: str) -> str:
+    import json
+    from groq import Groq
+    client = Groq(api_key=settings.GROQ_API_KEY)
+    sample = sql_data[:20]
+    data_str = json.dumps(sample, default=str)
+    user_msg = (
+        f"User question: {original_query}\n\n"
+        f"Query results ({len(sql_data)} total rows, showing up to 20):\n{data_str}"
+    )
+    response = client.chat.completions.create(
+        model=settings.GROQ_MODEL,
+        messages=[
+            {"role": "system", "content": ANSWER_PROMPT},
+            {"role": "user",   "content": user_msg},
+        ],
+        temperature=0.3,
+        max_tokens=300,
+    )
+    return response.choices[0].message.content.strip()
+
+
 def generate_sql(query: str) -> dict:
     start = time.time()
     detected_lang = detect_language(query)
@@ -122,18 +151,28 @@ def execute_nlp_query(query: str, db_session) -> dict:
             "result_row_count": 0,
         }
 
+    nl_answer = None
     try:
         from sqlalchemy import text
         rows = db_session.execute(text(sql)).mappings().all()
         data = [dict(row) for row in rows]
         result["query_result"] = data
         result["result_row_count"] = len(data)
+
+        if data and settings.GROQ_API_KEY:
+            try:
+                nl_answer = _generate_nl_answer(
+                    query, data, result.get("detected_language", "en")
+                )
+            except Exception:
+                pass
     except Exception as e:
         result["is_successful"] = False
         result["error_message"] = str(e)
         result["query_result"] = []
         result["result_row_count"] = 0
 
+    result["nl_answer"] = nl_answer
     return result
 
 
