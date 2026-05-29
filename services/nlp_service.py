@@ -141,8 +141,12 @@ def execute_nlp_query(query: str, db_session) -> dict:
 
     sql = result["generated_sql"]
 
-    dangerous = ["drop", "delete", "truncate", "update", "insert", "alter", "create"]
-    if any(kw in sql.lower() for kw in dangerous):
+    import re
+    dangerous_pattern = re.compile(
+        r'\b(drop|delete|truncate|update|insert|alter|create\s+table|create\s+index)\b',
+        re.IGNORECASE,
+    )
+    if dangerous_pattern.search(sql):
         return {
             **result,
             "is_successful": False,
