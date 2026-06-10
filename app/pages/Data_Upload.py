@@ -145,7 +145,7 @@ if uploaded:
                 mode = df_clean[col].mode()
                 df_clean[col].fillna(mode[0] if not mode.empty else "Unknown", inplace=True)
 
-        save_dataset(df_clean)
+        save_dataset(df_clean, uploaded.name)
         progress.progress(15, text="Data cleaned and saved...")
 
         results = {}

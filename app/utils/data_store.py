@@ -7,10 +7,12 @@ import numpy as np
 import streamlit as st
 
 
-def save_dataset(df: pd.DataFrame):
+def save_dataset(df: pd.DataFrame, filename: str = "Uploaded dataset"):
     st.session_state["uploaded_df"]     = df
     st.session_state["data_loaded"]     = True
     st.session_state["data_summary"]    = _compute_summary(df)
+    st.session_state["data_filename"]   = filename
+    st.session_state["data_loaded_at"]  = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M")
 
 
 def get_dataset() -> pd.DataFrame:
@@ -152,6 +154,8 @@ def load_snapshot() -> bool:
         if snap and snap.summary_json:
             st.session_state["data_loaded"]          = True
             st.session_state["data_summary"]         = snap.summary_json
+            st.session_state["data_filename"]        = snap.filename or "Uploaded dataset"
+            st.session_state["data_loaded_at"]       = str(snap.created_at)[:16] if snap.created_at else ""
             st.session_state["_snap_revenue"]        = snap.revenue_json or []
             st.session_state["_snap_branch"]         = snap.branch_json or []
             st.session_state["_snap_only"]           = True
@@ -162,6 +166,17 @@ def load_snapshot() -> bool:
     except Exception:
         pass
     return False
+
+
+def get_data_lineage() -> dict:
+    summary = get_summary()
+    return {
+        "filename":  st.session_state.get("data_filename", "Uploaded dataset"),
+        "rows":      summary.get("total_rows", 0),
+        "date_from": summary.get("date_from", ""),
+        "date_to":   summary.get("date_to", ""),
+        "loaded_at": st.session_state.get("data_loaded_at", ""),
+    }
 
 
 def get_branch_df() -> pd.DataFrame:

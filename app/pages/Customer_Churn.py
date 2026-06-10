@@ -8,6 +8,16 @@ import plotly.graph_objects as go
 
 from app.utils.session import require_auth, get_db_session
 from app.utils.data_store import get_churn_df, is_data_loaded
+from services.auth_service import AuditService
+
+
+def _log(user_id, action, details=None, success=True):
+    try:
+        db = get_db_session()
+        AuditService.log(db, user_id=user_id, action=action, resource=action.lower(), details=details, is_success=success)
+        db.close()
+    except Exception:
+        pass
 from app.components.theme import load_css, apply_theme, render_page_header, render_footer
 from app.components.sidebar import render_sidebar
 
@@ -81,6 +91,11 @@ with tab1:
                                       paper_bgcolor="rgba(0,0,0,0)")
                     st.plotly_chart(fig, use_container_width=True)
 
+                    _log(user["id"], "CHURN_PREDICTION", {
+                        "credit_score": credit_score, "age": age, "geography": geography,
+                        "churn_prob": round(result["churn_probability"], 3),
+                        "segment": result["risk_segment"],
+                    })
                 with col_info:
                     segment = result["risk_segment"]
                     color_map = {"High Risk": "error", "Medium Risk": "warning",
@@ -150,6 +165,10 @@ with tab2:
 
                 high_risk = (result_df["will_churn"] == 1).sum()
                 churn_rate = high_risk / len(result_df)
+                _log(user["id"], "BATCH_CHURN_SCAN", {
+                    "total": len(result_df), "high_risk": int(high_risk),
+                    "churn_rate": round(float(churn_rate), 4),
+                })
 
                 m1, m2, m3, m4 = st.columns(4)
                 m1.metric("Total Customers", f"{len(result_df):,}")
@@ -357,6 +376,24 @@ with tab4:
                     )
                     st.plotly_chart(fig_roc, use_container_width=True,
                                     config={"displayModeBar": False})
+
+            # ── Business Impact Summary ───────────────────────────────────────
+            if cm:
+                tn2, fp2, fn2, tp2 = cm[0][0], cm[0][1], cm[1][0], cm[1][1]
+                total_test = tn2 + fp2 + fn2 + tp2
+                precision_pct = cr.get('1', {}).get('precision', 0) * 100
+                recall_pct    = cr.get('1', {}).get('recall', 0) * 100
+                st.markdown("---")
+                st.markdown("#### Business Impact Summary")
+                st.markdown(
+                    f"""<div class="info-card">
+                    <b>Out of every 100 customers who actually churned:</b> the model identifies <b>{recall_pct:.0f}</b> of them ({fn2} missed in test set).<br>
+                    <b>Out of every 100 churn alerts raised:</b> <b>{precision_pct:.0f}</b> are real churners — targeted retention actions are justified.<br>
+                    <b>Overall accuracy on {total_test:,} test customers:</b> {(tn2+tp2)/total_test*100:.1f}% correctly classified.<br>
+                    <b>False alarm rate:</b> {fp2/(fp2+tn2)*100:.1f}% of loyal customers incorrectly flagged for retention.
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
 
             if cr:
                 st.markdown("---")
