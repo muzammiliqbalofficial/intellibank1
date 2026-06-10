@@ -9,6 +9,7 @@ from app.utils.session import require_auth, get_db_session
 from app.components.theme import load_css, apply_theme, render_page_header, render_footer
 from app.components.sidebar import render_sidebar
 from services.nlp_service import execute_nlp_query, get_suggested_queries
+from services.auth_service import AuditService
 
 st.set_page_config(page_title="IntelliBank — NLP Query", page_icon="💬", layout="wide", initial_sidebar_state="expanded")
 load_css()
@@ -79,6 +80,16 @@ if submit and query:
                 error_message=result.get("error_message"),
             )
             db.add(log)
+            AuditService.log(
+                db, user_id=user["id"], action="NLP_QUERY", resource="nlp_queries",
+                details={
+                    "query":   query[:200],
+                    "rows":    result.get("result_row_count", 0),
+                    "success": result.get("is_successful", False),
+                },
+                is_success=result.get("is_successful", False),
+                error_message=result.get("error_message"),
+            )
             db.commit()
         finally:
             db.close()

@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from app.utils.session import require_auth
-from app.utils.data_store import get_dataset, is_data_loaded, get_summary, get_branch_df, get_revenue_df, load_snapshot
+from app.utils.data_store import get_dataset, is_data_loaded, get_summary, get_branch_df, get_revenue_df, load_snapshot, get_data_lineage
 from app.components.theme import load_css, apply_theme, render_page_header, metric_card, render_footer
 from app.components.sidebar import render_sidebar
 from app.components.tour import render_tour
@@ -197,6 +197,15 @@ elif role == "bank_manager":
     if not loaded:
         st.info("📤 No dataset uploaded yet. Ask your analyst to upload data to see full insights.")
     else:
+        # ── Data Lineage Bar ───────────────────────────────────────────────────
+        lin = get_data_lineage()
+        st.caption(
+            f"**Data Source:** {lin['filename']}  ·  "
+            f"**Rows:** {lin['rows']:,}  ·  "
+            f"**Period:** {lin['date_from']} to {lin['date_to']}  ·  "
+            f"**Loaded:** {lin['loaded_at']}  ·  Source: uploaded CSV → session cache"
+        )
+
         # ── Revenue Trend ──────────────────────────────────────────────────────
         rev_df = get_revenue_df()
         col_l, col_r = st.columns([2, 1])
@@ -357,6 +366,15 @@ else:
             st.switch_page("pages/Data_Upload.py")
         render_footer()
         st.stop()
+
+    # ── Data Lineage Bar ──────────────────────────────────────────────────────
+    lin = get_data_lineage()
+    st.caption(
+        f"**Data Source:** {lin['filename']}  ·  "
+        f"**Rows:** {lin['rows']:,}  ·  "
+        f"**Period:** {lin['date_from']} to {lin['date_to']}  ·  "
+        f"**Loaded:** {lin['loaded_at']}  ·  Source: uploaded CSV → session cache"
+    )
 
     # KPI cards
     c1, c2, c3, c4 = st.columns(4)

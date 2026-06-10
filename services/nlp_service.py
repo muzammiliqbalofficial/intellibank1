@@ -14,22 +14,41 @@ Use specific numbers from the data. Be direct and professional.
 If results are empty, say so clearly.
 Do NOT mention SQL or technical details. Respond in the same language as the user's question."""
 
-SYSTEM_PROMPT = """You are IntelliBank's SQL query generator. Convert natural language questions about banking data into PostgreSQL queries.
+SYSTEM_PROMPT = """You are IntelliBank's SQL query generator. Convert natural language questions into PostgreSQL SELECT queries.
 
 Database schema:
-- users(id, username, email, role, branch_id, created_at)
-- branches(id, name, code, city, region)
-- customers(id, customer_number, full_name, credit_score, is_churned, churn_probability, branch_id)
-- accounts(id, account_number, customer_id, branch_id, account_type, balance, currency)
-- transactions(id, transaction_ref, account_id, amount, transaction_type, merchant_category, is_fraud, fraud_score, transaction_date)
-- fraud_alerts(id, transaction_id, fraud_score, is_resolved, created_at)
-- prediction_logs(id, customer_id, model_type, prediction, confidence, created_at)
+- customers(id INT, customer_number VARCHAR, full_name VARCHAR, credit_score INT,
+            is_churned BOOLEAN, churn_probability FLOAT, branch_id INT)
+- transactions(id INT, transaction_ref VARCHAR, account_id INT, amount FLOAT,
+               transaction_type VARCHAR, merchant_category VARCHAR,
+               is_fraud BOOLEAN, fraud_score FLOAT, transaction_date DATE)
+- accounts(id INT, account_number VARCHAR, customer_id INT, branch_id INT,
+           account_type VARCHAR, balance FLOAT, currency VARCHAR)
+- fraud_alerts(id INT, transaction_id INT, fraud_score FLOAT, is_resolved BOOLEAN, created_at TIMESTAMP)
+- prediction_logs(id INT, customer_id INT, model_type VARCHAR, prediction FLOAT,
+                  confidence FLOAT, created_at TIMESTAMP)
+- branches(id INT, name VARCHAR, code VARCHAR, city VARCHAR, region VARCHAR)
+- users(id INT, username VARCHAR, email VARCHAR, role VARCHAR, branch_id INT, created_at TIMESTAMP)
 
-Rules:
-1. Return ONLY valid PostgreSQL SELECT queries. Never UPDATE, DELETE, DROP, or INSERT.
-2. Always use LIMIT clause (max 1000 rows).
-3. Use proper JOINs for cross-table queries.
-4. Return the SQL query only — no explanation, no markdown, no code blocks."""
+Join paths:
+  transactions → accounts: transactions.account_id = accounts.id
+  accounts → customers:    accounts.customer_id = customers.id
+  customers → branches:    customers.branch_id = branches.id
+
+Critical rules:
+1. Return ONLY a valid PostgreSQL SELECT query. NEVER use UPDATE, DELETE, DROP, INSERT, ALTER, or CREATE.
+2. Always include LIMIT (max 1000).
+3. Date column is transaction_date (type DATE). Use:
+   - "today"       → transaction_date = CURRENT_DATE
+   - "this month"  → transaction_date >= DATE_TRUNC('month', CURRENT_DATE)
+   - "last 7 days" → transaction_date >= CURRENT_DATE - INTERVAL '7 days'
+   - "last 30 days"→ transaction_date >= CURRENT_DATE - INTERVAL '30 days'
+4. is_fraud and is_churned are BOOLEAN — use TRUE/FALSE, not 1/0.
+5. For "customers churned this month": since customers.is_churned has no date, query
+   prediction_logs WHERE model_type = 'churn' AND prediction >= 0.5 AND
+   created_at >= DATE_TRUNC('month', CURRENT_DATE).
+6. For revenue/amount queries use SUM(amount) on transactions.
+7. Return the raw SQL only — no markdown, no code fences, no semicolons, no explanation."""
 
 URDU_BANKING_TERMS = {
     "لین دین": "transactions",
@@ -170,6 +189,14 @@ def execute_nlp_query(query: str, db_session) -> dict:
                 )
             except Exception as e:
                 result["nl_answer_error"] = str(e)
+        elif not data:
+            nl_answer = (
+                "No records found for this query. This could mean: "
+                "(1) the date range has no data in the database yet, "
+                "(2) the filter condition did not match any rows, or "
+                "(3) the relevant table is empty. "
+                "Try broadening the time range or removing filters."
+            )
     except Exception as e:
         result["is_successful"] = False
         result["error_message"] = str(e)
