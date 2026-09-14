@@ -1,6 +1,36 @@
-﻿.env
+﻿# Dependencies
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# Python cache & virtualenvs
 __pycache__/
-*.pyc
-*.joblib
-*.egg-info/
-.streamlit/secrets.toml
+*.py[cod]
+*.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Large Datasets (>100MB exceeds GitHub push limit)
+creditcard.csv
+data/raw/creditcard.csv
+
+# Vite / Build outputs
+dist/
+dist-ssr/
+*.local
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
