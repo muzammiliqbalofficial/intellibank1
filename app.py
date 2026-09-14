@@ -11,7 +11,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from streamlit_option_menu import option_menu
 
-st.set_page_config(page_title="IntelliBank AI-Powered Analyst", page_icon="🏦", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="IntelliBank AI-Powered Analyst", page_icon="", layout="wide", initial_sidebar_state="expanded")
 
 # --- Paths ---
 db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "database.db")
@@ -220,21 +220,21 @@ def show_login_page():
     with col1:
         st.markdown("""
         <div style="background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); padding: 35px; border-radius: 24px; color: white; height: 100%; min-height: 520px; box-shadow: 0 10px 30px rgba(29, 78, 216, 0.35);">
-            <div style="font-size: 52px; margin-bottom: 10px;">🏦</div>
+            <div style="font-size: 52px; margin-bottom: 10px;"></div>
             <h1 style="color: white !important; font-weight: 900; margin: 0; font-size: 32px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 15px;">IntelliBank</h1>
             <p style="color: #bfdbfe; font-size: 16px; margin-top: 10px; font-weight: 500;">AI-Powered Banking Data Analyst</p>
             <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 15px;">
                 <div style="background: rgba(255,255,255,0.1); padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                    <b>🛡️ Fraud Detection</b><br><span style="font-size: 12px; opacity: 0.8;">XGBoost + SHAP Explainability</span>
+                    <b> Fraud Detection</b><br><span style="font-size: 12px; opacity: 0.8;">XGBoost + SHAP Explainability</span>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                    <b>👥 Customer Churn</b><br><span style="font-size: 12px; opacity: 0.8;">Random Forest + Churn Hotspots</span>
+                    <b> Customer Churn</b><br><span style="font-size: 12px; opacity: 0.8;">Random Forest + Churn Hotspots</span>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                    <b>📈 Revenue Forecasting</b><br><span style="font-size: 12px; opacity: 0.8;">Facebook Prophet Time-Series</span>
+                    <b> Revenue Forecasting</b><br><span style="font-size: 12px; opacity: 0.8;">Facebook Prophet Time-Series</span>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                    <b>💬 NLP Query Engine</b><br><span style="font-size: 12px; opacity: 0.8;">English & Urdu Natural Queries</span>
+                    <b> NLP Query Engine</b><br><span style="font-size: 12px; opacity: 0.8;">English & Urdu Natural Queries</span>
                 </div>
             </div>
             <div style="margin-top: 40px; font-size: 11px; opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; line-height: 1.5;">
@@ -269,13 +269,13 @@ def show_login_page():
         # Credentials box
         st.markdown("""
         <div style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); padding: 15px; border-radius: 12px; margin-top: 25px; font-size: 12px;">
-            <b style="color: #3b82f6;">🔑 Demo Access Accounts:</b><br>
+            <b style="color: #3b82f6;"> Demo Access Accounts:</b><br>
             • Admin Role: <code>admin</code> / <code>admin123</code><br>
             • Bank Manager: <code>manager</code> / <code>manager123</code><br>
             • Business Analyst: <code>analyst</code> / <code>analyst123</code>
         </div>
         <div style="text-align: center; font-size: 10px; color: #64748b; margin-top: 20px;">
-            🔒 Secured with Bcrypt, JWT tokens, & RBAC controls
+             Secured with Bcrypt, JWT tokens, & RBAC controls
         </div>
         """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -319,7 +319,7 @@ def show_login_page():
 def show_sidebar():
     st.sidebar.markdown("""
     <div style="padding: 10px 0 20px 0; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.08);">
-        <div style="font-size: 40px; margin-bottom: 5px;">🏦</div>
+        <div style="font-size: 40px; margin-bottom: 5px;"></div>
         <h2 style="color: white !important; font-size: 20px; font-weight: 800; margin: 0;">IntelliBank</h2>
         <span style="font-size: 11px; color: #64748b; letter-spacing: 2px; text-transform: uppercase;">AI Analytics Platform</span>
     </div>
@@ -333,7 +333,7 @@ def show_sidebar():
     st.sidebar.markdown(f"""
     <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 15px; border-radius: 12px; margin: 20px 0;">
         <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">Authenticated Session</span>
-        <div style="color: white; font-weight: 700; font-size: 15px; margin-top: 4px;">👤 {st.session_state['username'].capitalize()}</div>
+        <div style="color: white; font-weight: 700; font-size: 15px; margin-top: 4px;"> {st.session_state['username'].capitalize()}</div>
         <div style="display: inline-block; background: {badge_color}20; color: {badge_color}; border: 1px solid {badge_color}40; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-top: 6px;">
             {st.session_state['role']}
         </div>
@@ -341,7 +341,7 @@ def show_sidebar():
     """, unsafe_allow_html=True)
     
     # Control Row (Language & Theme selectors)
-    st.sidebar.markdown(f"**⚙️ Controls**", unsafe_allow_html=True)
+    st.sidebar.markdown(f"** Controls**", unsafe_allow_html=True)
     lang_options = ["English", "Urdu"]
     st.session_state["lang"] = st.sidebar.selectbox("Language Selection", lang_options, index=lang_options.index(st.session_state["lang"]))
     
@@ -388,7 +388,7 @@ def show_sidebar():
 
 # ADMIN DASHBOARD (Figure 5.3)
 def show_admin_dashboard():
-    st.markdown("## ⚙️ Administrative Command Center")
+    st.markdown("# dministrative Command Center")
     st.markdown("Monitor system roles, user activity, and create new analyst accounts.")
     
     col1, col2, col3 = st.columns(3)
@@ -457,7 +457,7 @@ def show_admin_dashboard():
 
 # MANAGER DASHBOARD (Figure 5.4)
 def show_manager_dashboard():
-    st.markdown("## 📊 Executive Overview Dashboard")
+    st.markdown("# xecutive Overview Dashboard")
     st.markdown("High-level insights for operational efficiency and model output verification.")
     
     col1, col2, col3, col4 = st.columns(4)
@@ -502,13 +502,13 @@ def show_manager_dashboard():
     # Reports
     col_rep1, col_rep2 = st.columns(2)
     with col_rep1:
-        if st.button("📥 Export Executive PDF Summary Report", use_container_width=True):
+        if st.button(" Export Executive PDF Summary Report", use_container_width=True):
             st.success("PDF Report successfully compiled and saved to local directory.")
             log_event(st.session_state["username"], "export_report:pdf", "reports", "Success")
 
 # ANALYST DASHBOARD (Figure 5.5)
 def show_analyst_dashboard():
-    st.markdown("## 🚨 Analyst Risk Monitor Dashboard")
+    st.markdown("# nalyst Risk Monitor Dashboard")
     st.markdown("Real-time telemetry and deep metrics for fraud alerts and churn patterns.")
     
     col1, col2, col3, col4 = st.columns(4)
@@ -544,11 +544,11 @@ def show_analyst_dashboard():
 
 # DATA UPLOAD (Figures 5.6 & 5.7)
 def show_upload_page():
-    st.markdown("## 📁 Ingestion & Model Training Hub")
+    st.markdown("# ngestion & Model Training Hub")
     
     st.markdown("""
     <div style="background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.15); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-        <h4 style="margin: 0 0 10px 0; color: #3b82f6 !important;">📋 Target Schema Guidelines (22 Required Columns)</h4>
+        <h4 style="margin: 0 0 10px 0; color: #3b82f6 !important;"> Target Schema Guidelines (22 Required Columns)</h4>
         <span style="font-size: 13px; line-height: 1.6;">
             Your CSV files must include customer variables (<code>customer_id, age, gender, credit_score, city</code>), account attributes (<code>balance, tenure, products, active_member</code>), and transactional telemetry (<code>trans_id, amount, category, type, is_fraud, step</code>) to train predictive models.
         </span>
@@ -614,7 +614,7 @@ def show_upload_page():
 
 # FRAUD MONITOR MODULE (Figures 5.8 to 5.12)
 def show_fraud_page():
-    st.markdown("## 🛡️ AI Fraud Detection System")
+    st.markdown("# I Fraud Detection System")
     st.markdown("Real-time transaction risk profiling via XGBoost and SHAP explainability.")
     
     tab1, tab2, tab3, tab4 = st.tabs(["Single Transaction", "Batch Analysis", "Alerts Dashboard", "Model Insights"])
@@ -664,7 +664,7 @@ def show_fraud_page():
                 # Warning box
                 st.markdown(f"""
                 <div style="background: #fef2f2; border: 2px solid #fecaca; padding: 25px; border-radius: 12px; margin-top: 20px;">
-                    <h3 style="color: #dc2626 !important; margin: 0 0 10px 0;">🚨 CRITICAL ALERT: FRAUD DETECTED</h3>
+                    <h3 style="color: #dc2626 !important; margin: 0 0 10px 0;"> CRITICAL ALERT: FRAUD DETECTED</h3>
                     <table style="width: 100%; font-size: 13px; color: #1e293b;">
                         <tr><td><b>Fraud Probability:</b></td><td style="color: #dc2626; font-weight:700;">87.3%</td></tr>
                         <tr><td><b>Model Confidence:</b></td><td>96.8% (High)</td></tr>
@@ -716,7 +716,7 @@ def show_fraud_page():
     with tab3:
         st.markdown("""
         <div style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: 700; font-size: 14px;">
-            🔴 Real-Time Monitoring Active (Listening on local sqlite transaction tables)
+             Real-Time Monitoring Active (Listening on local sqlite transaction tables)
         </div>
         """, unsafe_allow_html=True)
         st.markdown("### Active Security Alerts Queue")
@@ -737,19 +737,19 @@ def show_fraud_page():
         
         st.markdown("#### Classifier Classification Metrics Report")
         st.code("""
-              precision    recall  f1-score   support
+              precisio ecal 1-scor upport
 
-           0       0.99      0.98      0.98     45777
-           1       0.91      0.92      0.91       512
+            .9 .9 .9 5777
+            .9 .9 .9 12
 
-    accuracy                           0.98     46289
-   macro avg       0.95      0.95      0.95     46289
-weighted avg       0.98      0.98      0.98     46289
+    accurac .9 6289
+   macro av .9 .9 .9 6289
+weighted av .9 .9 .9 6289
         """)
 
 # CUSTOMER CHURN MODULE (Figures 5.13 to 5.15)
 def show_churn_page():
-    st.markdown("## 👥 Retention & Customer Churn Analytics")
+    st.markdown("# etention & Customer Churn Analytics")
     st.markdown("Predict flight risk probability and identify key churn drivers using Random Forest.")
     
     tab1, tab2, tab3 = st.tabs(["Predict Customer", "Batch Analysis", "High-Risk Dashboard"])
@@ -795,7 +795,7 @@ def show_churn_page():
             with col_res2:
                 st.markdown("""
                 <div style="background: #fff7ed; border: 2px solid #fed7aa; padding: 20px; border-radius: 12px; margin-top: 15px;">
-                    <h3 style="color: #ea580c !important; margin: 0 0 10px 0;">🚨 HIGH CHURN RISK</h3>
+                    <h3 style="color: #ea580c !important; margin: 0 0 10px 0;"> HIGH CHURN RISK</h3>
                     <table style="font-size: 13px; color: #1e293b; width:100%;">
                         <tr><td><b>Risk Segment:</b></td><td style="color:#ea580c; font-weight:700;">High Risk (78.4%)</td></tr>
                         <tr><td><b>Retention Priority:</b></td><td>Immediate Intervention</td></tr>
@@ -859,7 +859,7 @@ def show_churn_page():
 
 # REVENUE FORECASTING MODULE (Figures 5.16 & 5.17)
 def show_revenue_page():
-    st.markdown("## 📈 Revenue Analytics & Forecasting")
+    st.markdown("# evenue Analytics & Forecasting")
     st.markdown("Facebook Prophet time-series models mapped to Pakistani banking holiday patterns.")
     
     tab1, tab2 = st.tabs(["Forecast Dashboard", "Seasonality Analysis"])
@@ -959,7 +959,7 @@ def show_revenue_page():
 # NLP QUERY ENGINE (Figures 5.18 & 5.19)
 def show_nlp_page():
     # Urdu Title toggle
-    title_text = "اردو / English NLP Query Engine" if st.session_state["lang"] == "Urdu" else "💬 Natural Language Query Engine"
+    title_text = "اردو / English NLP Query Engine" if st.session_state["lang"] == "Urdu" else " Natural Language Query Engine"
     st.markdown(f"## {title_text}")
     st.markdown("Interact directly with the banking Postgres/SQLite database using natural commands.")
     
@@ -1028,16 +1028,16 @@ GROUP BY b.branch_name;
 
 # BRANCH COMPARISON & MAPS (Figures 5.20 to 5.23)
 def show_branches_page():
-    st.markdown("## 🏢 Regional Branches Comparison Platform")
+    st.markdown("# egional Branches Comparison Platform")
     st.markdown("Benchmarking performance of IntelliBank's five primary branches in Pakistan.")
     
     tab1, tab2, tab3, tab4 = st.tabs(["Leaderboard", "KPI Comparison", "Head-to-Head", "Performance Map"])
     
     # Pre-calculated metric values
     branch_data = [
-        {"Rank": "🥇 Rank 1", "Branch": "Blue Area Branch, Islamabad", "Revenue (PKR)": 5110000, "Transactions": 14200, "Fraud Rate": 0.02, "Churn Rate": 14.1, "KPI Score": 94.5},
-        {"Rank": "🥈 Rank 2", "Branch": "Clifton Branch, Karachi", "Revenue (PKR)": 4210000, "Transactions": 12800, "Fraud Rate": 0.14, "Churn Rate": 22.4, "KPI Score": 87.2},
-        {"Rank": "🥉 Rank 3", "Branch": "DHA Branch, Karachi", "Revenue (PKR)": 3890000, "Transactions": 11500, "Fraud Rate": 0.10, "Churn Rate": 19.5, "KPI Score": 81.8},
+        {"Rank": " Rank 1", "Branch": "Blue Area Branch, Islamabad", "Revenue (PKR)": 5110000, "Transactions": 14200, "Fraud Rate": 0.02, "Churn Rate": 14.1, "KPI Score": 94.5},
+        {"Rank": " Rank 2", "Branch": "Clifton Branch, Karachi", "Revenue (PKR)": 4210000, "Transactions": 12800, "Fraud Rate": 0.14, "Churn Rate": 22.4, "KPI Score": 87.2},
+        {"Rank": " Rank 3", "Branch": "DHA Branch, Karachi", "Revenue (PKR)": 3890000, "Transactions": 11500, "Fraud Rate": 0.10, "Churn Rate": 19.5, "KPI Score": 81.8},
         {"Rank": "Rank 4", "Branch": "Gulberg Branch, Lahore", "Revenue (PKR)": 2840000, "Transactions": 9800, "Fraud Rate": 0.09, "Churn Rate": 18.2, "KPI Score": 76.5},
         {"Rank": "Rank 5", "Branch": "Model Town Branch, Lahore", "Region": "Central", "Revenue (PKR)": 1980000, "Transactions": 8000, "Fraud Rate": 0.06, "Churn Rate": 15.9, "KPI Score": 69.2}
     ]
@@ -1115,11 +1115,11 @@ def show_branches_page():
         row_b = df_branches[df_branches["Branch"] == b_b].iloc[0]
         
         hh_df = pd.DataFrame([
-            {"Metric": "Revenue (PKR)", b_a: f"{row_a['Revenue (PKR)']:,}", b_b: f"{row_b['Revenue (PKR)']:,}", "Winner": f"🏆 {b_a.split(',')[0]}" if row_a['Revenue (PKR)'] > row_b['Revenue (PKR)'] else f"🏆 {b_b.split(',')[0]}"},
-            {"Metric": "Transactions", b_a: f"{row_a['Transactions']:,}", b_b: f"{row_b['Transactions']:,}", "Winner": f"🏆 {b_a.split(',')[0]}" if row_a['Transactions'] > row_b['Transactions'] else f"🏆 {b_b.split(',')[0]}"},
-            {"Metric": "Fraud Rate", b_a: f"{row_a['Fraud Rate']}%", b_b: f"{row_b['Fraud Rate']}%", "Winner": f"🏆 {b_a.split(',')[0]}" if row_a['Fraud Rate'] < row_b['Fraud Rate'] else f"🏆 {b_b.split(',')[0]}"},
-            {"Metric": "Churn Rate", b_a: f"{row_a['Churn Rate']}%", b_b: f"{row_b['Churn Rate']}%", "Winner": f"🏆 {b_a.split(',')[0]}" if row_a['Churn Rate'] < row_b['Churn Rate'] else f"🏆 {b_b.split(',')[0]}"},
-            {"Metric": "KPI Score", b_a: f"{row_a['KPI Score']}/100", b_b: f"{row_b['KPI Score']}/100", "Winner": f"🏆 {b_a.split(',')[0]}" if row_a['KPI Score'] > row_b['KPI Score'] else f"🏆 {b_b.split(',')[0]}"}
+            {"Metric": "Revenue (PKR)", b_a: f"{row_a['Revenue (PKR)']:,}", b_b: f"{row_b['Revenue (PKR)']:,}", "Winner": f" {b_a.split(',')[0]}" if row_a['Revenue (PKR)'] > row_b['Revenue (PKR)'] else f" {b_b.split(',')[0]}"},
+            {"Metric": "Transactions", b_a: f"{row_a['Transactions']:,}", b_b: f"{row_b['Transactions']:,}", "Winner": f" {b_a.split(',')[0]}" if row_a['Transactions'] > row_b['Transactions'] else f" {b_b.split(',')[0]}"},
+            {"Metric": "Fraud Rate", b_a: f"{row_a['Fraud Rate']}%", b_b: f"{row_b['Fraud Rate']}%", "Winner": f" {b_a.split(',')[0]}" if row_a['Fraud Rate'] < row_b['Fraud Rate'] else f" {b_b.split(',')[0]}"},
+            {"Metric": "Churn Rate", b_a: f"{row_a['Churn Rate']}%", b_b: f"{row_b['Churn Rate']}%", "Winner": f" {b_a.split(',')[0]}" if row_a['Churn Rate'] < row_b['Churn Rate'] else f" {b_b.split(',')[0]}"},
+            {"Metric": "KPI Score", b_a: f"{row_a['KPI Score']}/100", b_b: f"{row_b['KPI Score']}/100", "Winner": f" {b_a.split(',')[0]}" if row_a['KPI Score'] > row_b['KPI Score'] else f" {b_b.split(',')[0]}"}
         ])
         st.table(hh_df)
         st.success(f"Winner Summary: {b_a.split(',')[0]} leads in 4 out of 5 KPI evaluations.")
@@ -1163,7 +1163,7 @@ def show_branches_page():
 
 # AUDIT TRAIL PAGE (Figure 5.24)
 def show_audit_page():
-    st.markdown("## 🛡️ Admin Audit Logs Registry")
+    st.markdown("# dmin Audit Logs Registry")
     st.markdown("Tamper-evident logs monitoring user logins, model training, exports and queries.")
     
     # Filters
@@ -1220,7 +1220,7 @@ def show_audit_page():
         
         audit_df = pd.read_sql(query_str, conn)
         # Apply visual status badges
-        audit_df["Status"] = audit_df["Status"].apply(lambda s: "✅ Success" if s == "Success" else "❌ Failed")
+        audit_df["Status"] = audit_df["Status"].apply(lambda s: " Success" if s == "Success" else " Failed")
         st.dataframe(audit_df, use_container_width=True)
     except:
         st.info("No audit logs found.")

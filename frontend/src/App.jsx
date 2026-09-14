@@ -4,10 +4,10 @@ import axios from 'axios';
 const API = 'http://localhost:8000/api';
 
 const NAV = [
-  { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-  { id: 'fraud', label: 'Fraud Monitor', icon: '🛡️' },
-  { id: 'churn', label: 'Churn Analysis', icon: '👥' },
-  { id: 'upload', label: 'Data Upload', icon: '☁️' },
+  { id: 'dashboard', label: 'Dashboard', icon: '' },
+  { id: 'fraud', label: 'Fraud Monitor', icon: '' },
+  { id: 'churn', label: 'Churn Analysis', icon: '' },
+  { id: 'upload', label: 'Data Upload', icon: '' },
 ];
 
 export default function App() {
@@ -32,7 +32,7 @@ function Sidebar({ auth, tab, setTab, setAuth }) {
     <aside style={{ width: 260, background: '#1e293b', display: 'flex', flexDirection: 'column', boxShadow: '4px 0 20px rgba(0,0,0,0.15)' }}>
       <div style={{ padding: '32px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 42, height: 42, background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🏦</div>
+          <div style={{ width: 42, height: 42, background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}></div>
           <div>
             <div style={{ color: '#fff', fontWeight: 800, fontSize: 18, letterSpacing: -0.5 }}>IntelliBank</div>
             <div style={{ color: '#64748b', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginTop: 2 }}>AI Analytics</div>
@@ -78,7 +78,7 @@ function Login({ setAuth }) {
     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg,#f0f4ff 0%,#e8f4fd 100%)', fontFamily: 'Inter, sans-serif' }}>
       <div style={{ background: '#fff', padding: 48, borderRadius: 24, boxShadow: '0 20px 60px rgba(0,0,0,0.08)', width: 420, border: '1px solid #e2e8f0' }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(59,130,246,0.35)' }}>🏦</div>
+          <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(59,130,246,0.35)' }}></div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', margin: 0 }}>IntelliBank AI</h1>
           <p style={{ color: '#64748b', fontSize: 14, marginTop: 6 }}>Secure Access Portal</p>
         </div>
@@ -136,7 +136,7 @@ function PageHeader({ title, subtitle, color = '#3b82f6' }) {
 function EmptyState({ message }) {
   return (
     <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>📂</div>
+      <div style={{ fontSize: 48, marginBottom: 16 }}></div>
       <div style={{ fontSize: 15, fontWeight: 600 }}>{message}</div>
       <div style={{ fontSize: 13, marginTop: 8 }}>Upload data via the Data Upload tab to populate analytics.</div>
     </div>
@@ -153,7 +153,7 @@ function Dashboard() {
       <PageHeader title="Executive Dashboard" subtitle="High-level overview of banking operations and AI system status." />
       {stats.transactions === 0 && (
         <div style={{ background: '#fffbeb', border: '1px solid #fbbf24', borderRadius: 12, padding: '16px 20px', marginBottom: 28, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 20 }}>⚠️</span>
+          <span style={{ fontSize: 20 }}></span>
           <div>
             <b style={{ color: '#92400e' }}>No Data Loaded</b>
             <p style={{ color: '#78350f', fontSize: 13, margin: '4px 0 0' }}>Upload CSV files in the <b>Data Upload</b> tab to activate analytics and AI models.</p>
@@ -161,9 +161,9 @@ function Dashboard() {
         </div>
       )}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 28 }}>
-        <KPI label="Total Customers" value={stats.customers.toLocaleString()} icon="👥" color="#3b82f6" />
-        <KPI label="Transactions" value={stats.transactions.toLocaleString()} icon="💳" color="#8b5cf6" />
-        <KPI label="Branches" value={stats.branches} icon="🏢" color="#10b981" />
+        <KPI label="Total Customers" value={stats.customers.toLocaleString()} icon="" color="#3b82f6" />
+        <KPI label="Transactions" value={stats.transactions.toLocaleString()} icon="" color="#8b5cf6" />
+        <KPI label="Branches" value={stats.branches} icon="" color="#10b981" />
       </div>
       <Card>
         <h3 style={{ margin: '0 0 12px', color: '#1e293b', fontWeight: 700 }}>About IntelliBank AI</h3>
@@ -212,8 +212,8 @@ function FraudPage() {
     <div>
       <PageHeader title="Fraud Monitor" subtitle="XGBoost-powered real-time transaction anomaly detection." />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 28 }}>
-        <KPI label="Transactions Screened" value={data.stats.total.toLocaleString()} icon="🔍" color="#3b82f6" />
-        <KPI label="Critical Alerts" value={data.stats.alerts} icon="🚨" color="#ef4444" />
+        <KPI label="Transactions Screened" value={data.stats.total.toLocaleString()} icon="" color="#3b82f6" />
+        <KPI label="Critical Alerts" value={data.stats.alerts} icon="" color="#ef4444" />
       </div>
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -245,7 +245,7 @@ function ChurnPage() {
     <div>
       <PageHeader title="Churn Analysis" subtitle="Random Forest model predicting customer retention risk scores." />
       <div style={{ marginBottom: 28 }}>
-        <KPI label="High-Risk Customers" value={data.stats.high_risk} icon="⚠️" color="#f59e0b" />
+        <KPI label="High-Risk Customers" value={data.stats.high_risk} icon="" color="#f59e0b" />
       </div>
       <Card>
         <h3 style={{ margin: '0 0 20px', color: '#0f172a', fontWeight: 800 }}>At-Risk Customer Registry</h3>
@@ -276,10 +276,10 @@ function UploadPage() {
     const fd = new FormData(); fd.append('file', file);
     try {
       const r = await axios.post(`${API}/upload?table=${table}`, fd);
-      setMsg({ type: 'success', text: `✅ ${r.data.message}` });
+      setMsg({ type: 'success', text: ` ${r.data.message}` });
       setFile(null);
     } catch (e) {
-      setMsg({ type: 'error', text: `❌ Upload failed: ${e.response?.data?.detail || 'Unknown error'}` });
+      setMsg({ type: 'error', text: ` Upload failed: ${e.response?.data?.detail || 'Unknown error'}` });
     }
     setLoading(false);
   };
@@ -292,15 +292,15 @@ function UploadPage() {
         <div style={{ marginBottom: 20 }}>
           <label style={{ display: 'block', fontWeight: 700, fontSize: 13, color: '#374151', marginBottom: 8 }}>Target Table</label>
           <select value={table} onChange={e => setTable(e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 14, color: '#0f172a', background: '#f8fafc', outline: 'none' }}>
-            <option value="Transactions">Transactions — feeds Fraud Detection AI</option>
-            <option value="Customers">Customers — feeds Churn Analysis AI</option>
+            <option value="Transactions">Transactions - feeds Fraud Detection AI</option>
+            <option value="Customers">Customers - feeds Churn Analysis AI</option>
           </select>
         </div>
 
         <div style={{ marginBottom: 28 }}>
           <label style={{ display: 'block', fontWeight: 700, fontSize: 13, color: '#374151', marginBottom: 8 }}>Select CSV File</label>
           <div style={{ border: '2px dashed #cbd5e1', borderRadius: 12, padding: 32, textAlign: 'center', background: '#f8fafc', cursor: 'pointer' }}>
-            <div style={{ fontSize: 36, marginBottom: 10 }}>☁️</div>
+            <div style={{ fontSize: 36, marginBottom: 10 }}></div>
             <input type="file" accept=".csv" onChange={e => setFile(e.target.files[0])} style={{ fontSize: 14, color: '#64748b' }} />
             {file && <div style={{ marginTop: 12, color: '#3b82f6', fontWeight: 600, fontSize: 14 }}>Selected: {file.name}</div>}
           </div>
@@ -311,7 +311,7 @@ function UploadPage() {
         </button>
 
         <div style={{ marginTop: 24, padding: 16, background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 10 }}>
-          <b style={{ color: '#0369a1', fontSize: 13 }}>📋 How it works:</b>
+          <b style={{ color: '#0369a1', fontSize: 13 }}> How it works:</b>
           <ul style={{ margin: '8px 0 0', paddingLeft: 20, color: '#0369a1', fontSize: 13, lineHeight: 1.8 }}>
             <li>Upload your <b>Transaction CSV</b> to enable Fraud Detection analytics</li>
             <li>Upload your <b>Customer CSV</b> to enable Churn Prediction analytics</li>

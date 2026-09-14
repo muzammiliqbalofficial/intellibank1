@@ -1,5 +1,5 @@
 ========================================================================
-                      INTELLIBANK — INSTALLATION GUIDE
+                      INTELLIBANK - INSTALLATION GUIDE
 ========================================================================
 
 Project Title: IntelliBank: AI-Powered Banking Data Analyst
