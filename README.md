@@ -12,46 +12,41 @@ IntelliBank is an AI-powered banking intelligence dashboard offering fraud detec
 
 ## System Prerequisites
 * Python 3.9+ (Recommended: Python 3.10 or 3.11)
-* Pip (Python Package Installer)
+* Pip
 * Node.js & npm (for React/Vite frontend)
 
 ---
 
 ## Installation & Setup
 
-### 1. Install Python Dependencies
 ```bash
 pip install -r requirements.txt
-```
-
-### 2. Frontend Setup (React / Vite)
-```bash
 cd frontend
 npm install
 npm run dev
 ```
 
----
-
 ## Running the Application
 
-IntelliBank runs on a two-tier architecture (FastAPI Backend + Streamlit / Vite Frontend).
+IntelliBank uses a FastAPI backend with Streamlit / Vite frontend components.
 
-### Terminal 1: FastAPI Backend
 ```bash
 python backend/main.py
 ```
-> Backend runs at http://localhost:8000
 
-### Terminal 2: Streamlit Dashboard
+Backend: `http://localhost:8000`
+
 ```bash
 streamlit run app.py
 ```
-> Dashboard runs at http://localhost:8501
+
+Dashboard: `http://localhost:8501`
 
 ---
 
-## Demo Credentials (Role-Based Access)
+## Demo Credentials (Local Development Only)
+
+> **Security notice:** The accounts below are intentionally weak **demo credentials for the local academic project only**. They must never be reused for a public or production deployment. A real deployment should replace them with proper authentication, hashed credentials, secret management, and server-side authorization.
 
 | Role | Username | Password | Permissions / View |
 | :--- | :--- | :--- | :--- |
@@ -62,9 +57,9 @@ streamlit run app.py
 ---
 
 ## Project Structure
-* app.py: Core Streamlit frontend controller
-* backend/main.py: FastAPI REST endpoint server
-* database.db: Relational SQLite database with pre-populated records
-* data_preprocessing.py: Data ingestion and DB preparation script
-* models/: Pre-trained XGBoost and Random Forest binary models for fraud & churn predictions
-* frontend/: React + Vite frontend dashboard
+* `app.py`: Core Streamlit frontend controller
+* `backend/main.py`: FastAPI REST endpoint server
+* `database.db`: SQLite database with pre-populated demo records
+* `data_preprocessing.py`: Data ingestion and DB preparation
+* `models/`: Pre-trained XGBoost and Random Forest models for fraud & churn predictions
+* `frontend/`: React + Vite frontend dashboard
